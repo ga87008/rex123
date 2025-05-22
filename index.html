@@ -3,93 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>每日天父的話</title>
+  <title>天父的話</title>
   <style>
     body {
       margin: 0;
-      font-family: "Noto Serif TC", serif;
-      background: linear-gradient(to bottom, #cfe0f5, #f4f9ff);
-      background-image: url('https://i.imgur.com/tV1sRSV.jpg');
+      padding: 0;
+      font-family: "Noto Sans TC", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: url('sky.jpg') no-repeat center center fixed;
       background-size: cover;
-      background-position: center;
-      color: #333;
-      text-align: center;
-      padding: 2em;
+      backdrop-filter: brightness(0.9);
     }
-    .logo {
-      width: 80px;
-      margin: 0 auto 1em;
+    .verse-box {
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
     .verse {
-      font-size: 1.5em;
-      line-height: 1.8;
-      margin: 1em 0;
-      background-color: rgba(255,255,255,0.6);
-      border-radius: 12px;
-      padding: 1em;
-      display: inline-block;
-      max-width: 600px;
+      font-size: 1.4rem;
+      color: #333;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
     }
     .reference {
-      font-size: 1em;
+      font-size: 1rem;
       color: #555;
     }
   </style>
 </head>
 <body>
-  <img class="logo" src="https://i.imgur.com/FkFWZLZ.png" alt="橄欖樹 Logo">
-  <div class="verse" id="verse"></div>
-  <div class="reference" id="reference"></div>
+  <div class="verse-box">
+    <div class="verse" id="verse">載入中...</div>
+    <div class="reference" id="reference"></div>
+  </div>
 
   <script>
     const verses = [
-      { text: "我知道我向你們所懷的意念，是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。", ref: "耶利米書 29:11" },
-      { text: "你不要害怕，因為我與你同在；不要驚惶，因為我是你的神。", ref: "以賽亞書 41:10" },
-      { text: "凡勞苦擔重擔的人可以到我這裡來，我就使你們得安息。", ref: "馬太福音 11:28" },
-      { text: "主是我的牧者，我必不致缺乏。", ref: "詩篇 23:1" },
-      { text: "你們禱告，無論求什麼，只要信，就必得著。", ref: "馬太福音 21:22" },
-      { text: "耶和華靠近傷心的人，拯救靈性痛悔的人。", ref: "詩篇 34:18" },
-      { text: "你要專心仰賴耶和華，不可倚靠自己的聰明。", ref: "箴言 3:5" },
-      { text: "應當一無掛慮，只要凡事藉著禱告、祈求，和感謝，將你們所要的告訴神。", ref: "腓立比書 4:6" },
       { text: "因為出於神的話，沒有一句不帶能力的。", ref: "路加福音 1:37" },
-      { text: "我們行事為人是憑著信心，不是憑著眼見。", ref: "哥林多後書 5:7" },
-      { text: "耶和華是我的力量，是我的盾牌；我心裡倚靠他，就得幫助。", ref: "詩篇 28:7" },
-      { text: "在世上你們有苦難；但你們可以放心，我已經勝了世界。", ref: "約翰福音 16:33" },
-      { text: "神是我們的避難所，是我們的力量，是我們在患難中隨時的幫助。", ref: "詩篇 46:1" },
-      { text: "愛是恆久忍耐，又有恩慈；愛是不嫉妒，不自誇，不張狂。", ref: "哥林多前書 13:4" },
-      { text: "萬軍之耶和華說：不是倚靠勢力，不是倚靠才能，乃是倚靠我的靈方能成事。", ref: "撒迦利亞書 4:6" },
-      { text: "我們知道萬事都互相效力，叫愛神的人得益處，就是按他旨意被召的人。", ref: "羅馬書 8:28" },
-      { text: "你們要靠主常常喜樂，我再說，你們要喜樂。", ref: "腓立比書 4:4" },
-      { text: "祂醫好傷心的人，裹好他們的傷處。", ref: "詩篇 147:3" },
-      { text: "神既不愛惜自己的兒子，為我們眾人捨了，豈不也把萬物和他一同白白地賜給我們嗎？", ref: "羅馬書 8:32" },
-      { text: "你們要休息，要知道我是神。", ref: "詩篇 46:10" },
-      { text: "你要盡心、盡性、盡意愛主你的神。", ref: "馬太福音 22:37" },
-      { text: "人若賺得全世界，賠上自己的生命，有什麼益處呢？", ref: "馬太福音 16:26" },
-      { text: "凡事都有定期，天下萬務都有定時。", ref: "傳道書 3:1" },
-      { text: "義人的路好像黎明的光，越照越明，直到日午。", ref: "箴言 4:18" },
-      { text: "主耶穌說：我留下平安給你們；我將我的平安賜給你們。", ref: "約翰福音 14:27" },
-      { text: "耶和華本為善，在患難的日子為人的保障，並且認得那些投靠他的人。", ref: "那鴻書 1:7" },
-      { text: "但那等候耶和華的，必重新得力。他們必如鷹展翅上騰。", ref: "以賽亞書 40:31" },
-      { text: "耶穌說：我是世界的光。跟從我的，就不在黑暗裡走，必要得著生命的光。", ref: "約翰福音 8:12" },
-      { text: "你要以耶和華為樂，他就將你心裡所求的賜給你。", ref: "詩篇 37:4" },
-      { text: "神的國不在乎吃喝，只在乎公義、和平，並聖靈中的喜樂。", ref: "羅馬書 14:17" },
-      // ……補足至 200 條
+{ text: "我留下平安給你們，我將我的平安賜給你們。", ref: "約翰福音 14:27" },
+{ text: "你不要害怕，因為我與你同在；不要驚惶，因為我是你的神。", ref: "以賽亞書 41:10" },
+{ text: "凡勞苦擔重擔的人可以到我這裡來，我就使你們得安息。", ref: "馬太福音 11:28" },
+{ text: "你要專心仰賴耶和華，不可倚靠自己的聰明。", ref: "箴言 3:5" },
+{ text: "神是我們的避難所，是我們的力量，是我們患難中隨時的幫助。", ref: "詩篇 46:1" },
+{ text: "你們禱告，無論求甚麼，只要信，就必得著。", ref: "馬太福音 21:22" },
+{ text: "耶和華是我的牧者，我必不致缺乏。", ref: "詩篇 23:1" },
+{ text: "你出你入，耶和華要保護你，從今時直到永遠。", ref: "詩篇 121:8" },
+{ text: "在指望中要喜樂，在患難中要忍耐，禱告要恆切。", ref: "羅馬書 12:12" },
+{ text: "我總不撇下你，也不丟棄你。", ref: "希伯來書 13:5" },
+{ text: "靠著那加給我力量的，凡事都能做。", ref: "腓立比書 4:13" },
+{ text: "我賜給你們一條新命令，乃是叫你們彼此相愛。", ref: "約翰福音 13:34" },
+{ text: "萬事都互相效力，叫愛神的人得益處。", ref: "羅馬書 8:28" },
+{ text: "願賜平安的主隨時親自賜你們平安。", ref: "帖撒羅尼迦後書 3:16" },
+{ text: "喜樂的心乃是良藥，憂傷的靈使骨枯乾。", ref: "箴言 17:22" },
+{ text: "你要以耶和華為樂，他就將你心裡所求的賜給你。", ref: "詩篇 37:4" },
+{ text: "主所賜的福使人富足，並不加上憂慮。", ref: "箴言 10:22" },
+{ text: "在世上你們有苦難，但你們可以放心，我已經勝了世界。", ref: "約翰福音 16:33" },
+{ text: "耶和華靠近傷心的人，拯救靈性痛悔的人。", ref: "詩篇 34:18" },
+{ text: "你們要將一切的憂慮卸給神，因為他顧念你們。", ref: "彼得前書 5:7" },
+{ text: "你們要剛強壯膽，不要害怕，也不要畏懼他們。", ref: "申命記 31:6" },
+{ text: "你們中間誰願為大，就必作你們的用人。", ref: "馬太福音 20:26" },
+{ text: "我耶和華必在你右邊幫助你。", ref: "以賽亞書 41:13" },
+{ text: "義人的道路好像黎明的光，越照越明，直到日午。", ref: "箴言 4:18" },
+{ text: "主是我的力量，是我的盾牌；我心裡倚靠他就得幫助。", ref: "詩篇 28:7" },
+{ text: "信是所望之事的實底，是未見之事的確據。", ref: "希伯來書 11:1" },
+{ text: "你們要讚美耶和華，因他本為善，他的慈愛永遠長存。", ref: "詩篇 107:1" },
+{ text: "神沒有賜給我們膽怯的心，乃是剛強、仁愛、謹守的心。", ref: "提摩太後書 1:7" },
+{ text: "你要認識神，就得平安，福氣也必臨到你。", ref: "約伯記 22:21" },
+{ text: "耶和華是我的力量，是我的詩歌，也成了我的拯救。", ref: "詩篇 118:14" },
+{ text: "你們要靠主常常喜樂，我再說，你們要喜樂。", ref: "腓立比書 4:4" },
+{ text: "忍耐到底的，必然得救。", ref: "馬太福音 24:13" },
+{ text: "惟有仰望耶和華的必重新得力。", ref: "以賽亞書 40:31" },
+{ text: "耶穌說，我是世界的光。", ref: "約翰福音 8:12" },
+{ text: "我們愛，因為神先愛我們。", ref: "約翰一書 4:19" },
+{ text: "我心裡柔和謙卑，你們當負我的軛，學我的樣式。", ref: "馬太福音 11:29" },
+{ text: "你們要彼此相愛，像我愛你們一樣。", ref: "約翰福音 15:12" },
+{ text: "耶和華的名是堅固臺，義人奔入便得安穩。", ref: "箴言 18:10" },
+{ text: "耶和華必為你爭戰，你們只管靜默，不要作聲。", ref: "出埃及記 14:14" },
+{ text: "要一無掛慮，只要凡事藉著禱告祈求和感謝將你們所要的告訴神。", ref: "腓立比書 4:6" },
+{ text: "不要效法這個世界，只要心意更新而變化。", ref: "羅馬書 12:2" },
+{ text: "我呼求的日子，你就應允我，鼓勵我，使我心裡有能力。", ref: "詩篇 138:3" },
+{ text: "神愛世人，甚至將他的獨生子賜給他們。", ref: "約翰福音 3:16" },
+{ text: "主耶和華是我的力量，他使我的腳快如母鹿的蹄。", ref: "哈巴谷書 3:19" },
+{ text: "你們要將一切的憂慮卸給神，因為他顧念你們。", ref: "彼得前書 5:7" },
+{ text: "耶和華是我的幫助，我必不懼怕。", ref: "希伯來書 13:6" },
+{ text: "我就是道路、真理、生命；若不藉著我，沒有人能到父那裡去。", ref: "約翰福音 14:6" },
+{ text: "那在你們心裡動了善工的，必成全這工。", ref: "腓立比書 1:6" },
+{ text: "耶和華是我的產業，是我杯中的分。", ref: "詩篇 16:5" },
+
     ];
 
     const today = new Date();
-    const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-    function mulberry32(a) {
-      return function() {
-        let t = a += 0x6D2B79F5;
-        t = Math.imul(t ^ t >>> 15, t | 1);
-        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-        return ((t ^ t >>> 14) >>> 0) / 4294967296;
-      }
+    const seed = parseInt(
+      String(today.getFullYear()) + String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0')
+    );
+
+    function seededIndex(seed, length) {
+      let x = Math.sin(seed) * 10000;
+      return Math.floor((x - Math.floor(x)) * length);
     }
-    const rand = mulberry32(seed);
-    const verse = verses[Math.floor(rand() * verses.length)];
-    document.getElementById("verse").innerText = verse.text;
-    document.getElementById("reference").innerText = verse.ref;
+
+    const index = seededIndex(seed, verses.length);
+    document.getElementById("verse").innerText = verses[index].text;
+    document.getElementById("reference").innerText = verses[index].ref;
   </script>
 </body>
 </html>
