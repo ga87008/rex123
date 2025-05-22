@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>¤µ¤é¸g¤å</title>
+  <title>ä»Šæ—¥ç¶“æ–‡</title>
   <style>
     body {
       font-family: "Noto Serif TC", serif;
@@ -43,26 +43,26 @@
 </head>
 <body>
   <div class="verse-box" id="verse-box">
-    <div class="verse-text" id="verse-text">Åª¨ú¤¤...</div>
+    <div class="verse-text" id="verse-text">è®€å–ä¸­...</div>
     <div class="verse-reference" id="verse-reference"></div>
   </div>
 
   <script>
-    // ¸g¤å¸ê®Æ®w
+    // ç¶“æ–‡è³‡æ–™åº«
     const verses = [
-      { text: "¥D¬O§ÚªºªªªÌ¡A§Ú¥²¤£­P¯Ê¥F¡C", reference: "¸Ö½g 23:1" },
-      { text: "§Ú¯d¤U¥­¦wµ¹§A­Ì¡F§Ú±N§Úªº¥­¦w½çµ¹§A­Ì¡C", reference: "¬ù¿«ºÖ­µ 14:27" },
-      { text: "¤Z³Ò­W¾á­«¾áªº¤H¥i¥H¨ì§Ú³o¸Ì¨Ó¡A§Ú´N¨Ï§A­Ì±o¦w®§¡C", reference: "°¨¤ÓºÖ­µ 11:28" },
-      { text: "¯«´N¬O·R¡C", reference: "¬ù¿«¤@®Ñ 4:8" },
-      { text: "§A­n±M¤ß¥õ¿à­C©MµØ¡A¤£¥i­Ê¾a¦Û¤vªºÁo©ú¡C", reference: "½e¨¥ 3:5" }
+      { text: "ä¸»æ˜¯æˆ‘çš„ç‰§è€…ï¼Œæˆ‘å¿…ä¸è‡´ç¼ºä¹ã€‚", reference: "è©©ç¯‡ 23:1" },
+      { text: "æˆ‘ç•™ä¸‹å¹³å®‰çµ¦ä½ å€‘ï¼›æˆ‘å°‡æˆ‘çš„å¹³å®‰è³œçµ¦ä½ å€‘ã€‚", reference: "ç´„ç¿°ç¦éŸ³ 14:27" },
+      { text: "å‡¡å‹è‹¦æ“”é‡æ“”çš„äººå¯ä»¥åˆ°æˆ‘é€™è£¡ä¾†ï¼Œæˆ‘å°±ä½¿ä½ å€‘å¾—å®‰æ¯ã€‚", reference: "é¦¬å¤ªç¦éŸ³ 11:28" },
+      { text: "ç¥å°±æ˜¯æ„›ã€‚", reference: "ç´„ç¿°ä¸€æ›¸ 4:8" },
+      { text: "ä½ è¦å°ˆå¿ƒä»°è³´è€¶å’Œè¯ï¼Œä¸å¯å€šé è‡ªå·±çš„è°æ˜ã€‚", reference: "ç®´è¨€ 3:5" }
     ];
 
-    // ®Ú¾Ú¤µ¤é¤é´Á¿ï¾Ü¤@¬q¸g¤å
+    // æ ¹æ“šä»Šæ—¥æ—¥æœŸé¸æ“‡ä¸€æ®µç¶“æ–‡
     const today = new Date();
     const index = today.getFullYear() + today.getMonth() + today.getDate();
     const verse = verses[index % verses.length];
 
-    // Åã¥Ü¸g¤å
+    // é¡¯ç¤ºç¶“æ–‡
     document.getElementById("verse-text").innerText = verse.text;
     document.getElementById("verse-reference").innerText = verse.reference;
   </script>
