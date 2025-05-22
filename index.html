@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>今日經文</title>
+  <style>
+    body {
+      font-family: "Noto Serif TC", serif;
+      background-color: #fdfdfb;
+      color: #333;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .verse-box {
+      max-width: 600px;
+      padding: 2rem;
+      border-radius: 1rem;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .verse-text {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    .verse-reference {
+      font-size: 1rem;
+      color: #777;
+    }
+    @media (max-width: 600px) {
+      .verse-text {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="verse-box" id="verse-box">
+    <div class="verse-text" id="verse-text">讀取中...</div>
+    <div class="verse-reference" id="verse-reference"></div>
+  </div>
+
+  <script>
+    // 經文資料庫
+    const verses = [
+      { text: "主是我的牧者，我必不致缺乏。", reference: "詩篇 23:1" },
+      { text: "我留下平安給你們；我將我的平安賜給你們。", reference: "約翰福音 14:27" },
+      { text: "凡勞苦擔重擔的人可以到我這裡來，我就使你們得安息。", reference: "馬太福音 11:28" },
+      { text: "神就是愛。", reference: "約翰一書 4:8" },
+      { text: "你要專心仰賴耶和華，不可倚靠自己的聰明。", reference: "箴言 3:5" }
+    ];
+
+    // 根據今日日期選擇一段經文
+    const today = new Date();
+    const index = today.getFullYear() + today.getMonth() + today.getDate();
+    const verse = verses[index % verses.length];
+
+    // 顯示經文
+    document.getElementById("verse-text").innerText = verse.text;
+    document.getElementById("verse-reference").innerText = verse.reference;
+  </script>
+</body>
+</html>
