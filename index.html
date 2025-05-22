@@ -1,70 +1,95 @@
 ﻿<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>今日經文</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每日天父的話</title>
   <style>
     body {
-      font-family: "Noto Serif TC", serif;
-      background-color: #fdfdfb;
-      color: #333;
       margin: 0;
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .verse-box {
-      max-width: 600px;
-      padding: 2rem;
-      border-radius: 1rem;
-      background: #ffffff;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      font-family: "Noto Serif TC", serif;
+      background: linear-gradient(to bottom, #cfe0f5, #f4f9ff);
+      background-image: url('https://i.imgur.com/tV1sRSV.jpg');
+      background-size: cover;
+      background-position: center;
+      color: #333;
       text-align: center;
+      padding: 2em;
     }
-    .verse-text {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      line-height: 1.6;
+    .logo {
+      width: 80px;
+      margin: 0 auto 1em;
     }
-    .verse-reference {
-      font-size: 1rem;
-      color: #777;
+    .verse {
+      font-size: 1.5em;
+      line-height: 1.8;
+      margin: 1em 0;
+      background-color: rgba(255,255,255,0.6);
+      border-radius: 12px;
+      padding: 1em;
+      display: inline-block;
+      max-width: 600px;
     }
-    @media (max-width: 600px) {
-      .verse-text {
-        font-size: 1.25rem;
-      }
+    .reference {
+      font-size: 1em;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <div class="verse-box" id="verse-box">
-    <div class="verse-text" id="verse-text">讀取中...</div>
-    <div class="verse-reference" id="verse-reference"></div>
-  </div>
+  <img class="logo" src="https://i.imgur.com/FkFWZLZ.png" alt="橄欖樹 Logo">
+  <div class="verse" id="verse"></div>
+  <div class="reference" id="reference"></div>
 
   <script>
-    // 經文資料庫
     const verses = [
-      { text: "主是我的牧者，我必不致缺乏。", reference: "詩篇 23:1" },
-      { text: "我留下平安給你們；我將我的平安賜給你們。", reference: "約翰福音 14:27" },
-      { text: "凡勞苦擔重擔的人可以到我這裡來，我就使你們得安息。", reference: "馬太福音 11:28" },
-      { text: "神就是愛。", reference: "約翰一書 4:8" },
-      { text: "你要專心仰賴耶和華，不可倚靠自己的聰明。", reference: "箴言 3:5" }
+      { text: "我知道我向你們所懷的意念，是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。", ref: "耶利米書 29:11" },
+      { text: "你不要害怕，因為我與你同在；不要驚惶，因為我是你的神。", ref: "以賽亞書 41:10" },
+      { text: "凡勞苦擔重擔的人可以到我這裡來，我就使你們得安息。", ref: "馬太福音 11:28" },
+      { text: "主是我的牧者，我必不致缺乏。", ref: "詩篇 23:1" },
+      { text: "你們禱告，無論求什麼，只要信，就必得著。", ref: "馬太福音 21:22" },
+      { text: "耶和華靠近傷心的人，拯救靈性痛悔的人。", ref: "詩篇 34:18" },
+      { text: "你要專心仰賴耶和華，不可倚靠自己的聰明。", ref: "箴言 3:5" },
+      { text: "應當一無掛慮，只要凡事藉著禱告、祈求，和感謝，將你們所要的告訴神。", ref: "腓立比書 4:6" },
+      { text: "因為出於神的話，沒有一句不帶能力的。", ref: "路加福音 1:37" },
+      { text: "我們行事為人是憑著信心，不是憑著眼見。", ref: "哥林多後書 5:7" },
+      { text: "耶和華是我的力量，是我的盾牌；我心裡倚靠他，就得幫助。", ref: "詩篇 28:7" },
+      { text: "在世上你們有苦難；但你們可以放心，我已經勝了世界。", ref: "約翰福音 16:33" },
+      { text: "神是我們的避難所，是我們的力量，是我們在患難中隨時的幫助。", ref: "詩篇 46:1" },
+      { text: "愛是恆久忍耐，又有恩慈；愛是不嫉妒，不自誇，不張狂。", ref: "哥林多前書 13:4" },
+      { text: "萬軍之耶和華說：不是倚靠勢力，不是倚靠才能，乃是倚靠我的靈方能成事。", ref: "撒迦利亞書 4:6" },
+      { text: "我們知道萬事都互相效力，叫愛神的人得益處，就是按他旨意被召的人。", ref: "羅馬書 8:28" },
+      { text: "你們要靠主常常喜樂，我再說，你們要喜樂。", ref: "腓立比書 4:4" },
+      { text: "祂醫好傷心的人，裹好他們的傷處。", ref: "詩篇 147:3" },
+      { text: "神既不愛惜自己的兒子，為我們眾人捨了，豈不也把萬物和他一同白白地賜給我們嗎？", ref: "羅馬書 8:32" },
+      { text: "你們要休息，要知道我是神。", ref: "詩篇 46:10" },
+      { text: "你要盡心、盡性、盡意愛主你的神。", ref: "馬太福音 22:37" },
+      { text: "人若賺得全世界，賠上自己的生命，有什麼益處呢？", ref: "馬太福音 16:26" },
+      { text: "凡事都有定期，天下萬務都有定時。", ref: "傳道書 3:1" },
+      { text: "義人的路好像黎明的光，越照越明，直到日午。", ref: "箴言 4:18" },
+      { text: "主耶穌說：我留下平安給你們；我將我的平安賜給你們。", ref: "約翰福音 14:27" },
+      { text: "耶和華本為善，在患難的日子為人的保障，並且認得那些投靠他的人。", ref: "那鴻書 1:7" },
+      { text: "但那等候耶和華的，必重新得力。他們必如鷹展翅上騰。", ref: "以賽亞書 40:31" },
+      { text: "耶穌說：我是世界的光。跟從我的，就不在黑暗裡走，必要得著生命的光。", ref: "約翰福音 8:12" },
+      { text: "你要以耶和華為樂，他就將你心裡所求的賜給你。", ref: "詩篇 37:4" },
+      { text: "神的國不在乎吃喝，只在乎公義、和平，並聖靈中的喜樂。", ref: "羅馬書 14:17" },
+      // ……補足至 200 條
     ];
 
-    // 根據今日日期選擇一段經文
     const today = new Date();
-    const index = today.getFullYear() + today.getMonth() + today.getDate();
-    const verse = verses[index % verses.length];
-
-    // 顯示經文
-    document.getElementById("verse-text").innerText = verse.text;
-    document.getElementById("verse-reference").innerText = verse.reference;
+    const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+    function mulberry32(a) {
+      return function() {
+        let t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      }
+    }
+    const rand = mulberry32(seed);
+    const verse = verses[Math.floor(rand() * verses.length)];
+    document.getElementById("verse").innerText = verse.text;
+    document.getElementById("reference").innerText = verse.ref;
   </script>
 </body>
 </html>
