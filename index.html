@@ -148,7 +148,7 @@
         {
           text: "不要因新聞報導驚惶，這一切都在我手中。末後的浪潮越是洶湧，越要定睛看我——我是平靜風浪的主，在你裡面有勝過世界的平安。",
           ref: "我將這些事告訴你們，是要叫你們在我裡面有平安。— 約翰福音16:33"
-        }
+        },
         {
     text: "孩子，當你覺得走在黑暗隧道中看不到盡頭時，請相信：我不是只在你前方終點等待，而是正牽著你的手一同行走。這段路程不會白費，我正用它塑造你更美的生命。",
     ref: "我雖然行過死蔭的幽谷，也不怕遭害，因為你與我同在。— 詩篇23:4"
@@ -253,12 +253,21 @@
         }
         
         // 計算索引
-        return Math.abs(hash) % verses.length;
+          return Math.abs(hash) % verses.length;
+        } catch (e) {
+          console.error("Error in getDailyVerse:", e);
+          return Math.floor(Math.random() * verses.length); // 後備方案
+        }
       }
 
-      const index = getDailyVerse();
-      document.getElementById("verse").innerText = verses[index].text;
-      document.getElementById("reference").innerText = verses[index].ref;
+      try {
+        const index = getDailyVerse();
+        document.getElementById("verse").innerText = verses[index].text;
+        document.getElementById("reference").innerText = verses[index].ref;
+      } catch (e) {
+        console.error("Error loading verse:", e);
+        document.getElementById("verse").innerText = "今日經文載入失敗，請刷新頁面";
+      }
     });
   </script>
 </body>
