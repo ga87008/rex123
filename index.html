@@ -18,35 +18,49 @@
       backdrop-filter: brightness(0.9);
     }
     .verse-box {
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: rgba(255, 255, 255, 0.85);
       border-radius: 16px;
       padding: 24px;
       max-width: 90%;
+      width: 600px;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     }
     .verse {
       font-size: 1.4rem;
       color: #333;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       white-space: pre-wrap;
-      line-height: 1.6;
+      line-height: 1.7;
     }
     .reference {
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: #555;
       font-style: italic;
+      margin-top: 20px;
+    }
+    .loader {
+      display: none;
+      font-size: 1.2rem;
+      color: #666;
     }
   </style>
 </head>
 <body>
   <div class="verse-box">
-    <div class="verse" id="verse">載入中...</div>
-    <div class="reference" id="reference"></div>
+    <div id="verse" class="verse"></div>
+    <div id="reference" class="reference"></div>
+    <div id="loader" class="loader">載入中...</div>
   </div>
 
   <script>
+    // 先顯示載入中
+    document.getElementById('loader').style.display = 'block';
+    
+    // 確保DOM完全載入
     document.addEventListener('DOMContentLoaded', function() {
+      try {
+        // 完整的經文數據 (已驗證格式)
       const verses = [
         {
           text: `親愛的孩子，我知道你在工作上承擔了很多壓力，別擔心，我一直與你同行。每一次你選擇誠實、忍耐，我都看見並紀念。你不是孤單的，我會為你開路。`,
@@ -231,42 +245,51 @@
   }
       ];
 
-      // 更可靠的每日經文選擇方案
-      function getDailyVerse() {
-        // 生成用戶唯一ID（永久保存）
-        let userId = localStorage.getItem('userId');
-        if (!userId) {
-          userId = 'user_' + Math.random().toString(36).substr(2, 9);
-          localStorage.setItem('userId', userId);
+      // 強化版每日經文選擇
+        function getDailyIndex() {
+          try {
+            // 1. 獲取或創建用戶唯一ID
+            let userId = localStorage.getItem('godWordUserId');
+            if (!userId) {
+              userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+              localStorage.setItem('godWordUserId', userId);
+            }
+            
+            // 2. 獲取今天日期 (YYYY-MM-DD)
+            const today = new Date().toISOString().slice(0, 10);
+            
+            // 3. 創建唯一種子
+            const seed = userId + today;
+            
+            // 4. 更穩定的哈希算法
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) {
+              const char = seed.charCodeAt(i);
+              hash = (hash << 5) - hash + char;
+              hash = hash & hash; // 轉為32位整數
+            }
+            
+            // 5. 返回固定索引
+            return Math.abs(hash) % verses.length;
+          } catch (e) {
+            console.error('Error in getDailyIndex:', e);
+            return Math.floor(Math.random() * verses.length); // 後備方案
+          }
         }
-        
-        // 基於「用戶ID+日期」生成固定哈希值
-        const today = new Date().toISOString().slice(0, 10);
-        const hashString = userId + today;
-        
-        // 簡單哈希函數
-        let hash = 0;
-        for (let i = 0; i < hashString.length; i++) {
-          const char = hashString.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash |= 0; // 轉為32位整數
-        }
-        
-        // 計算索引
-          return Math.abs(hash) % verses.length;
-        } catch (e) {
-          console.error("Error in getDailyVerse:", e);
-          return Math.floor(Math.random() * verses.length); // 後備方案
-        }
-      }
 
-      try {
-        const index = getDailyVerse();
-        document.getElementById("verse").innerText = verses[index].text;
-        document.getElementById("reference").innerText = verses[index].ref;
-      } catch (e) {
-        console.error("Error loading verse:", e);
-        document.getElementById("verse").innerText = "今日經文載入失敗，請刷新頁面";
+        // 顯示經文
+        const index = getDailyIndex();
+        document.getElementById('verse').textContent = verses[index].text;
+        document.getElementById('reference').textContent = verses[index].ref;
+        
+        // 隱藏載入中
+        document.getElementById('loader').style.display = 'none';
+        
+      } catch (error) {
+        console.error('嚴重錯誤:', error);
+        document.getElementById('verse').textContent = '經文載入失敗，請刷新頁面或稍後再試';
+        document.getElementById('reference').textContent = '';
+        document.getElementById('loader').style.display = 'none';
       }
     });
   </script>
