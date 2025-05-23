@@ -45,6 +45,25 @@
       color: #666;
     }
   </style>
+  /* ➕ 分享按鈕樣式 */
+.share-buttons {
+  margin-top: 20px;
+}
+.share-buttons a {
+  display: inline-block;
+  margin: 0 10px;
+  padding: 8px 16px;
+  background-color: #e0e0e0;
+  color: #333;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+.share-buttons a:hover {
+  background-color: #bbb;
+}
+
 </head>
 <body>
   <div class="verse-box">
@@ -52,7 +71,11 @@
     <div id="reference" class="reference"></div>
     <div id="loader" class="loader">載入中...</div>
   </div>
-
+<!-- ➕ 分享按鈕 -->
+<div class="share-buttons">
+  <a id="share-line" href="#" target="_blank">分享到 LINE</a>
+  <a id="share-facebook" href="#" target="_blank">分享到 Facebook</a>
+</div>
   <script>
     // 先顯示載入中
     document.getElementById('loader').style.display = 'block';
@@ -293,5 +316,16 @@
       }
     });
   </script>
+  // ➕ 設定分享連結
+const textToShare = `${selected.text}\n— ${selected.ref}`;
+const encodedText = encodeURIComponent(textToShare);
+const pageUrl = encodeURIComponent(window.location.href);
+
+// ➕ LINE 分享
+document.getElementById('share-line').href = `https://line.me/R/msg/text/?${encodedText}`;
+
+// ➕ Facebook 分享
+document.getElementById('share-facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${pageUrl}`;
+
 </body>
 </html>
