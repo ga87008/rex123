@@ -95,12 +95,10 @@
   </div>
 
   <script>
-    // 先顯示載入中
+  document.addEventListener('DOMContentLoaded', function() {
+    // 1. 顯示載入中
     document.getElementById('loader').style.display = 'block';
-    
-    // 確保DOM完全載入
-    document.addEventListener('DOMContentLoaded', function() {
-      try {
+
         // 完整的經文數據 (已驗證格式)
       const verses = [
         {
@@ -446,72 +444,57 @@
   }
       ];
 
-      // 強化版每日索引獲取
-      function getDailyIndex() {
-        // 1. 獲取或創建永久用戶ID
-        let userId = localStorage.getItem('godWordsUserId_v2');
-        if (!userId) {
-          userId = 'user_' + Math.random().toString(36).substr(2, 12);
-          localStorage.setItem('godWordsUserId_v2', userId);
-        }
-
-        // 2. 獲取今日日期 (格式: YYYYMMDD)
-        const today = new Date();
-        const todayStr = [
-          today.getFullYear(),
-          String(today.getMonth() + 1).padStart(2, '0'),
-          String(today.getDate()).padStart(2, '0')
-        ].join('');
-
-        // 3. 檢查是否已有今日記錄
-        const lastVisit = localStorage.getItem('lastVisitDate');
-        const savedIndex = localStorage.getItem('dailyIndex');
-
-        // 如果是同一天且存在記錄，直接返回
-        if (lastVisit === todayStr && savedIndex !== null) {
-          return parseInt(savedIndex);
-        }
-
-        // 4. 生成新索引 (基於用戶ID+日期)
-        const seed = userId + todayStr;
-        let hash = 0;
-        for (let i = 0; i < seed.length; i++) {
-          const char = seed.charCodeAt(i);
-          hash = (hash << 5) - hash + char;
-          hash |= 0;
-        }
-        const newIndex = Math.abs(hash) % verses.length;
-
-        // 5. 儲存今日記錄
-        localStorage.setItem('lastVisitDate', todayStr);
-        localStorage.setItem('dailyIndex', newIndex.toString());
-
-        return newIndex;
-      }
-
-      // 顯示經文
-      const index = getDailyIndex();
-      document.getElementById('verse').textContent = verses[index].text;
-      document.getElementById('reference').textContent = verses[index].ref;
-
-      // 設定分享連結
-      const shareText = encodeURIComponent(
-        `${verses[index].text}\n\n——${verses[index].ref}`
-      );
-      const shareUrl = encodeURIComponent(window.location.href);
-      document.getElementById('share-line').href = 
-        `https://line.me/R/msg/text/?${shareText}%0A%0A${shareUrl}`;
-      document.getElementById('share-fb').href = 
-        `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`;
-
-      // 隱藏載入中
-      document.getElementById('loader').style.display = 'none';
-
-    } catch (error) {
-      console.error('錯誤:', error);
-      document.getElementById('verse').textContent = '經文載入失敗，請刷新頁面';
-      document.getElementById('loader').textContent = '發生錯誤';
+     // 3. 跨瀏覽器設備指紋生成
+    function getDeviceFingerprint() {
+      const keys = [
+        navigator.platform,      // 作業系統 (Win/Mac/Linux)
+        navigator.hardwareConcurrency, // CPU核心數
+        screen.width + 'x' + screen.height, // 屏幕分辨率
+        navigator.deviceMemory || '1' // 記憶體大小 (GB)
+      ];
+      let hash = 0;
+      keys.join('|').split('').forEach((char) => {
+        hash = (hash << 5) - hash + char.charCodeAt(0);
+        hash |= 0;
+      });
+      return Math.abs(hash).toString(36).slice(0, 8);
     }
+
+    // 4. 生成今日唯一索引
+    function getDailyIndex() {
+      const today = new Date();
+      const dateSeed = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, '0'),
+        String(today.getDate()).padStart(2, '0')
+      ].join('');
+      
+      const seed = getDeviceFingerprint() + dateSeed;
+      let index = 0;
+      for (let i = 0; i < seed.length; i++) {
+        index = (index << 5) - index + seed.charCodeAt(i);
+        index |= 0;
+      }
+      return Math.abs(index) % verses.length;
+    }
+
+    // 5. 顯示經文
+    const index = getDailyIndex();
+    document.getElementById('verse').textContent = verses[index].text;
+    document.getElementById('reference').textContent = verses[index].ref;
+
+    // 6. 設定分享按鈕
+    const shareText = encodeURIComponent(
+      `${verses[index].text}\n\n——${verses[index].ref}`
+    );
+    const shareUrl = encodeURIComponent(window.location.href);
+    document.getElementById('share-line').href = 
+      `https://line.me/R/msg/text/?${shareText}%0A%0A${shareUrl}`;
+    document.getElementById('share-fb').href = 
+      `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`;
+
+    // 7. 隱藏載入中
+    document.getElementById('loader').style.display = 'none';
   });
 </script>
  </body>
