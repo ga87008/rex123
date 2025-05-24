@@ -446,63 +446,73 @@
   }
       ];
 
-      // 強化版每日經文選擇
-        function getDailyIndex() {
-          try {
-            // 1. 獲取或創建用戶唯一ID
-            let userId = localStorage.getItem('godWordUserId');
-            if (!userId) {
-              userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-              localStorage.setItem('godWordUserId', userId);
-            }
-            
-            // 2. 獲取今天日期 (YYYY-MM-DD)
-            const today = new Date().toISOString().slice(0, 10);
-            
-            // 3. 創建唯一種子
-            const seed = userId + today;
-            
-            // 4. 更穩定的哈希算法
-            let hash = 0;
-            for (let i = 0; i < seed.length; i++) {
-              const char = seed.charCodeAt(i);
-              hash = (hash << 5) - hash + char;
-              hash = hash & hash; // 轉為32位整數
-            }
-            
-            // 5. 返回固定索引
-            return Math.abs(hash) % verses.length;
-          } catch (e) {
-            console.error('Error in getDailyIndex:', e);
-            return Math.floor(Math.random() * verses.length); // 後備方案
-          }
+      // 強化版每日索引獲取
+      function getDailyIndex() {
+        // 1. 獲取或創建永久用戶ID
+        let userId = localStorage.getItem('godWordsUserId_v2');
+        if (!userId) {
+          userId = 'user_' + Math.random().toString(36).substr(2, 12);
+          localStorage.setItem('godWordsUserId_v2', userId);
         }
 
-        // 顯示經文
-        const index = getDailyIndex();
-        document.getElementById('verse').textContent = verses[index].text;
-        document.getElementById('reference').textContent = verses[index].ref;
-        // 更新分享按鈕的網址
-const text = encodeURIComponent(verses[index].text + ' - ' + verses[index].ref);
-const url = encodeURIComponent(window.location.href);
+        // 2. 獲取今日日期 (格式: YYYYMMDD)
+        const today = new Date();
+        const todayStr = [
+          today.getFullYear(),
+          String(today.getMonth() + 1).padStart(2, '0'),
+          String(today.getDate()).padStart(2, '0')
+        ].join('');
 
-// LINE 分享
-document.getElementById('share-line').href = `https://line.me/R/msg/text/?${text}`;
+        // 3. 檢查是否已有今日記錄
+        const lastVisit = localStorage.getItem('lastVisitDate');
+        const savedIndex = localStorage.getItem('dailyIndex');
 
-// Facebook 分享（含網址與說明）
-document.getElementById('share-fb').href = `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`;
+        // 如果是同一天且存在記錄，直接返回
+        if (lastVisit === todayStr && savedIndex !== null) {
+          return parseInt(savedIndex);
+        }
 
-        
-        // 隱藏載入中
-        document.getElementById('loader').style.display = 'none';
-        
-      } catch (error) {
-        console.error('嚴重錯誤:', error);
-        document.getElementById('verse').textContent = '經文載入失敗，請刷新頁面或稍後再試';
-        document.getElementById('reference').textContent = '';
-        document.getElementById('loader').style.display = 'none';
+        // 4. 生成新索引 (基於用戶ID+日期)
+        const seed = userId + todayStr;
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+          const char = seed.charCodeAt(i);
+          hash = (hash << 5) - hash + char;
+          hash |= 0;
+        }
+        const newIndex = Math.abs(hash) % verses.length;
+
+        // 5. 儲存今日記錄
+        localStorage.setItem('lastVisitDate', todayStr);
+        localStorage.setItem('dailyIndex', newIndex.toString());
+
+        return newIndex;
       }
-    });
-  </script>
+
+      // 顯示經文
+      const index = getDailyIndex();
+      document.getElementById('verse').textContent = verses[index].text;
+      document.getElementById('reference').textContent = verses[index].ref;
+
+      // 設定分享連結
+      const shareText = encodeURIComponent(
+        `${verses[index].text}\n\n——${verses[index].ref}`
+      );
+      const shareUrl = encodeURIComponent(window.location.href);
+      document.getElementById('share-line').href = 
+        `https://line.me/R/msg/text/?${shareText}%0A%0A${shareUrl}`;
+      document.getElementById('share-fb').href = 
+        `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`;
+
+      // 隱藏載入中
+      document.getElementById('loader').style.display = 'none';
+
+    } catch (error) {
+      console.error('錯誤:', error);
+      document.getElementById('verse').textContent = '經文載入失敗，請刷新頁面';
+      document.getElementById('loader').textContent = '發生錯誤';
+    }
+  });
+</script>
  </body>
 </html>
