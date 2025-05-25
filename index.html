@@ -108,6 +108,79 @@
       color: #ff6b6b;
       margin-top: 20px;
     }
+    /* ✨ 新增官方分享按鈕樣式 */
+    .share-buttons {
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .share-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 12px 24px;
+      border-radius: 50px; /* 膠囊形狀 */
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1rem;
+      transition: all 0.3s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      border: 2px solid transparent;
+    }
+    
+    .share-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .share-btn i {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+    
+    /* LINE 按鈕 - 官方標準 */
+    .line-share {
+      background: #06C755;
+      color: white;
+    }
+    .line-share:hover {
+      background: #05b34a;
+      border-color: rgba(255,255,255,0.3);
+    }
+    .line-icon {
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M19.6 4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h1.1c.5 0 .9-.4.9-.9V4.9c0-.5-.4-.9-.9-.9H19.6zM4.9 4C4.4 4 4 4.4 4 4.9v14.2c0 .5.4.9.9.9H6c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4.9zm5.8 4.7c0-.4.3-.7.7-.7h4.6c.4 0 .7.3.7.7v1.5c0 .4-.3.7-.7.7h-4.6c-.4 0-.7-.3-.7-.7V8.7z"/></svg>');
+    }
+    
+    /* Facebook 按鈕 - 官方標準 */
+    .fb-share {
+      background: #1877F2;
+      color: white;
+    }
+    .fb-share:hover {
+      background: #166fe5;
+      border-color: rgba(255,255,255,0.3);
+    }
+    .fb-icon {
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M22 12c0-5.5-4.5-10-10-10S2 6.5 2 12c0 5 3.7 9.1 8.4 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7C18.3 21.1 22 17 22 12z"/></svg>');
+    }
+
+    /* ✨ NFC分享觸發提示 */
+    .nfc-share-hint {
+      display: none;
+      margin-top: 20px;
+      padding: 12px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -121,13 +194,21 @@
   </div>
 
   <div class="verse-box" id="verseBox">
-    <div id="verse" class="verse"></div>
-    <div id="reference" class="reference"></div>
-    <div class="share-buttons">
-      <a href="#" id="share-line" target="_blank">分享到 LINE</a>
-      <a href="#" id="share-fb" target="_blank">分享到 Facebook</a>
+   <div class="share-buttons">
+      <a href="#" id="share-line" class="share-btn line-share" target="_blank">
+        <i class="line-icon"></i>
+        <span>分享到LINE</span>
+      </a>
+      <a href="#" id="share-fb" class="share-btn fb-share" target="_blank">
+        <i class="fb-icon"></i>
+        <span>分享到Facebook</span>
+      </a>
     </div>
-    <div id="loader" class="loader">載入中...</div>
+
+    <!-- ✨ 新增NFC分享提示 -->
+    <div class="nfc-share-hint" id="nfcShareHint">
+      提示：用NFC標籤輕觸手機可直接分享當前經文
+    </div>
   </div>
 
   <script>
@@ -634,6 +715,38 @@
 
     // 7. 隱藏載入中
     document.getElementById('loader').style.display = 'none';
+      // ✨ 新增NFC分享功能
+    function setupNfcSharing() {
+      if ('NDEFReader' in window) {
+        const shareHint = document.getElementById('nfcShareHint');
+        shareHint.style.display = 'block';
+        
+        const ndef = new NDEFReader();
+        ndef.scan().then(() => {
+          ndef.addEventListener('reading', ({ message }) => {
+            const currentVerse = `${verses[getDailyIndex()].text}\n\n${verses[getDailyIndex()].ref}`;
+            
+            // 自動選擇分享平台
+            if (message.records.some(r => r.recordType.includes('line'))) {
+              window.open(
+                `https://line.me/R/msg/text/?${encodeURIComponent(currentVerse)}`,
+                '_blank'
+              );
+            } else {
+              window.open(
+                `https://www.facebook.com/sharer/sharer.php?quote=${encodeURIComponent(currentVerse)}`,
+                '_blank'
+              );
+            }
+          });
+        });
+      }
+    }
+
+    // 初始化時調用
+    document.addEventListener('DOMContentLoaded', () => {
+      setupNfcSharing();
+      // [原有其他初始化代碼]
   });
 </script>
  </body>
