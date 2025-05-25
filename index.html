@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>天父的話</title>
+  <title>天父的話 - NFC版</title>
   <style>
     body {
       margin: 0;
@@ -44,23 +44,6 @@
       font-size: 1.2rem;
       color: #666;
     }
-        .share-buttons {
-      margin-top: 20px;
-    }
-    .share-buttons a {
-      display: inline-block;
-      margin: 0 10px;
-      padding: 8px 16px;
-      background-color: #e0e0e0;
-      color: #333;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      transition: background-color 0.3s;
-    }
-    .share-buttons a:hover {
-      background-color: #bbb;
-    }
     .share-buttons {
       margin-top: 20px;
       display: flex;
@@ -81,23 +64,179 @@
       background-color: #d0d0d0;
     }
 
+    /* ✨ 新增 NFC 掃描面板樣式 */
+    .nfc-panel {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.9);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .nfc-animation {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin-bottom: 20px;
+    }
+    .nfc-phone {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 120px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H7V5h10v14z"/></svg>') no-repeat center;
+      animation: float 2s ease-in-out infinite;
+    }
+    @keyframes float {
+      0% { transform: translate(-50%, -50%); }
+      50% { transform: translate(-50%, -55%); }
+      100% { transform: translate(-50%, -50%); }
+    }
+    .nfc-panel p {
+      color: white;
+      font-size: 1.2rem;
+      margin-top: 20px;
+    }
+    .nfc-error {
+      color: #ff6b6b;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <div class="verse-box">
+  <!-- ✨ 新增 NFC 掃描面板 -->
+  <div class="nfc-panel" id="nfcPanel">
+    <div class="nfc-animation">
+      <div class="nfc-phone"></div>
+    </div>
+    <p>請將手機靠近NFC標籤</p>
+    <p class="nfc-error" id="nfcError"></p>
+  </div>
+
+  <div class="verse-box" id="verseBox">
     <div id="verse" class="verse"></div>
     <div id="reference" class="reference"></div>
     <div class="share-buttons">
-  <a href="#" id="share-line" target="_blank">分享到 LINE</a>
-  <a href="#" id="share-fb" target="_blank">分享到 Facebook</a>
-</div>
+      <a href="#" id="share-line" target="_blank">分享到 LINE</a>
+      <a href="#" id="share-fb" target="_blank">分享到 Facebook</a>
+    </div>
     <div id="loader" class="loader">載入中...</div>
   </div>
 
   <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // 1. 顯示載入中
-    document.getElementById('loader').style.display = 'block';
+    document.addEventListener('DOMContentLoaded', function() {
+      const nfcPanel = document.getElementById('nfcPanel');
+      const nfcError = document.getElementById('nfcError');
+      const verseBox = document.getElementById('verseBox');
+      const loader = document.getElementById('loader');
+
+      // ✨ 新增 NFC 檢測
+      function initNFC() {
+        if (!('NDEFReader' in window)) {
+          throw new Error('此瀏覽器不支持Web NFC');
+        }
+
+        const ndef = new NDEFReader();
+        
+        ndef.scan()
+          .then(() => {
+            ndef.addEventListener('reading', ({ message }) => {
+              console.log("NFC 掃描成功");
+              showVerse(); // 掃描成功顯示經文
+            });
+            
+            ndef.addEventListener('readingerror', () => {
+              throw new Error('NFC讀取錯誤');
+            });
+          })
+          .catch(err => {
+            console.warn("NFC掃描啟動失敗:", err);
+            throw err;
+          });
+      }
+
+      // ⚡ 修改：顯示經文函數
+      function showVerse() {
+        nfcPanel.style.display = 'none';
+        verseBox.style.display = 'block';
+        loader.style.display = 'block';
+
+        const index = getDailyIndex();
+        document.getElementById('verse').textContent = verses[index].text;
+        document.getElementById('reference').textContent = verses[index].ref;
+        
+        // 設定分享按鈕
+        const shareText = encodeURIComponent(
+          `${verses[index].text}\n\n——${verses[index].ref}`
+        );
+        const shareUrl = encodeURIComponent(window.location.href);
+        document.getElementById('share-line').href = 
+          `https://line.me/R/msg/text/?${shareText}%0A%0A${shareUrl}`;
+        document.getElementById('share-fb').href = 
+          `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`;
+
+        loader.style.display = 'none';
+      }
+
+      // ✨ 新增：設備指紋生成
+      function getDeviceFingerprint() {
+        const keys = [
+          navigator.platform,
+          navigator.hardwareConcurrency,
+          screen.width + 'x' + screen.height,
+          navigator.deviceMemory || '1'
+        ];
+        let hash = 0;
+        keys.join('|').split('').forEach((char) => {
+          hash = (hash << 5) - hash + char.charCodeAt(0);
+          hash |= 0;
+        });
+        return Math.abs(hash).toString(36).slice(0, 8);
+      }
+
+      // ⚡ 修改：每日索引生成
+      function getDailyIndex() {
+        const today = new Date();
+        const dateSeed = [
+          today.getFullYear(),
+          String(today.getMonth() + 1).padStart(2, '0'),
+          String(today.getDate()).padStart(2, '0')
+        ].join('');
+        
+        const seed = getDeviceFingerprint() + dateSeed;
+        let index = 0;
+        for (let i = 0; i < seed.length; i++) {
+          index = (index << 5) - index + seed.charCodeAt(i);
+          index |= 0;
+        }
+        return Math.abs(index) % verses.length;
+      }
+
+      // ✨ 新增：點擊回退
+      document.body.addEventListener('click', () => {
+        if (verseBox.style.display === 'none') {
+          nfcError.textContent = 'NFC掃描已跳過，直接顯示經文';
+          setTimeout(() => showVerse(), 1000);
+        }
+      });
+
+      // 初始化
+      try {
+        initNFC();
+        nfcPanel.style.display = 'flex';
+        verseBox.style.display = 'none';
+      } catch (err) {
+        console.warn("NFC初始化失敗:", err);
+        nfcError.textContent = 'NFC功能不可用，直接顯示經文';
+        setTimeout(() => showVerse(), 1500);
+      }
 
         // 完整的經文數據 (已驗證格式)
       const verses = [
