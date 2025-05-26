@@ -107,17 +107,54 @@
     .nfc-error {
       color: #ff6b6b;
       margin-top: 20px;
+      text-align: center;
+    }
+    
+    /* +++ 新增 iOS 提示樣式 +++ */
+    .nfc-ios-hint {
+      display: none;
+      background: rgba(255,255,255,0.2);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 15px 20px 0;
+      font-size: 0.9rem;
+      max-width: 80%;
+      text-align: center;
+    }
+    .ios .nfc-ios-hint {
+      display: block;
+    }
+    
+    /* +++ 新增跳過按鈕樣式 +++ */
+    #skipNfc {
+      margin-top: 25px;
+      background: none;
+      border: none;
+      color: white;
+      text-decoration: underline;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+    #skipNfc:hover {
+      background: rgba(255,255,255,0.1);
     }
   </style>
 </head>
 <body>
-  <!-- ✨ 新增 NFC 掃描面板 -->
+  <!-- ✨ 修改後的 NFC 掃描面板 -->
   <div class="nfc-panel" id="nfcPanel">
     <div class="nfc-animation">
       <div class="nfc-phone"></div>
     </div>
     <p>請將手機靠近NFC標籤</p>
+    <div class="nfc-ios-hint">
+      ⓘ 在 iOS 系統上，掃描成功後請點擊通知打開經文
+    </div>
     <p class="nfc-error" id="nfcError"></p>
+    <button id="skipNfc">直接顯示經文</button>
   </div>
 
   <div class="verse-box" id="verseBox">
@@ -132,37 +169,76 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // +++ 新增設備類型檢測 +++
+      const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
+      if (isIOS) {
+        document.documentElement.classList.add('ios');
+      }
+      
       const nfcPanel = document.getElementById('nfcPanel');
       const nfcError = document.getElementById('nfcError');
       const verseBox = document.getElementById('verseBox');
       const loader = document.getElementById('loader');
+      const skipNfcBtn = document.getElementById('skipNfc');
 
-      // ✨ 新增 NFC 檢測
+      // +++ 修改後的 NFC 初始化函數 +++
       function initNFC() {
+        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+        if (!isMobile) {
+          throw new Error('請使用手機瀏覽器');
+        }
+
+        // iOS 只顯示提示，不實際啟用 NFC
+        if (isIOS) {
+          nfcError.innerHTML = 'iOS 需點擊通知<br><small>(系統限制)</small>';
+          return;
+        }
+
         if (!('NDEFReader' in window)) {
-          throw new Error('此瀏覽器不支持Web NFC');
+          throw new Error('請使用 Chrome 瀏覽器');
         }
 
         const ndef = new NDEFReader();
+        let nfcTimeout;
+        let alreadyRead = false;
         
+        // 10 秒超時處理
+        nfcTimeout = setTimeout(() => {
+          nfcError.textContent = '掃描超時，自動顯示經文';
+          showVerse();
+        }, 10000);
+
         ndef.scan()
           .then(() => {
             ndef.addEventListener('reading', ({ message }) => {
-              console.log("NFC 掃描成功");
-              showVerse(); // 掃描成功顯示經文
+              if (alreadyRead) return;
+              alreadyRead = true;
+              
+              clearTimeout(nfcTimeout);
+              console.log("NFC 掃描成功", message);
+              showVerse();
+              
+              // 自動關閉 NFC 連接
+              setTimeout(() => {
+                try { ndef.stop(); } catch(e) { console.log("NFC 正常結束"); }
+              }, 500);
             });
             
             ndef.addEventListener('readingerror', () => {
-              throw new Error('NFC讀取錯誤');
+              clearTimeout(nfcTimeout);
+              nfcError.textContent = '讀取失敗，請重試';
+              setTimeout(showVerse, 2000);
             });
           })
           .catch(err => {
-            console.warn("NFC掃描啟動失敗:", err);
-            throw err;
+            clearTimeout(nfcTimeout);
+            console.error("NFC 錯誤:", err);
+            nfcError.textContent = 'NFC 功能不可用';
+            setTimeout(showVerse, 1500);
           });
       }
 
-      // ⚡ 修改：顯示經文函數
+      // +++ 修改後的顯示經文函數 +++
       function showVerse() {
         nfcPanel.style.display = 'none';
         verseBox.style.display = 'block';
@@ -172,7 +248,6 @@
         document.getElementById('verse').textContent = verses[index].text;
         document.getElementById('reference').textContent = verses[index].ref;
         
-        // 設定分享按鈕
         const shareText = encodeURIComponent(
           `${verses[index].text}\n\n——${verses[index].ref}`
         );
@@ -185,46 +260,10 @@
         loader.style.display = 'none';
       }
 
-      // ✨ 新增：設備指紋生成
-      function getDeviceFingerprint() {
-        const keys = [
-          navigator.platform,
-          navigator.hardwareConcurrency,
-          screen.width + 'x' + screen.height,
-          navigator.deviceMemory || '1'
-        ];
-        let hash = 0;
-        keys.join('|').split('').forEach((char) => {
-          hash = (hash << 5) - hash + char.charCodeAt(0);
-          hash |= 0;
-        });
-        return Math.abs(hash).toString(36).slice(0, 8);
-      }
-
-      // ⚡ 修改：每日索引生成
-      function getDailyIndex() {
-        const today = new Date();
-        const dateSeed = [
-          today.getFullYear(),
-          String(today.getMonth() + 1).padStart(2, '0'),
-          String(today.getDate()).padStart(2, '0')
-        ].join('');
-        
-        const seed = getDeviceFingerprint() + dateSeed;
-        let index = 0;
-        for (let i = 0; i < seed.length; i++) {
-          index = (index << 5) - index + seed.charCodeAt(i);
-          index |= 0;
-        }
-        return Math.abs(index) % verses.length;
-      }
-
-      // ✨ 新增：點擊回退
-      document.body.addEventListener('click', () => {
-        if (verseBox.style.display === 'none') {
-          nfcError.textContent = 'NFC掃描已跳過，直接顯示經文';
-          setTimeout(() => showVerse(), 1000);
-        }
+      // +++ 新增跳過 NFC 按鈕事件 +++
+      skipNfcBtn.addEventListener('click', () => {
+        nfcError.textContent = '已跳過 NFC 掃描';
+        showVerse();
       });
 
       // 初始化
@@ -234,7 +273,7 @@
         verseBox.style.display = 'none';
       } catch (err) {
         console.warn("NFC初始化失敗:", err);
-        nfcError.textContent = 'NFC功能不可用，直接顯示經文';
+        nfcError.textContent = err.message;
         setTimeout(() => showVerse(), 1500);
       }
 
@@ -583,39 +622,39 @@
   }
       ];
 
-     // 3. 跨瀏覽器設備指紋生成
-    function getDeviceFingerprint() {
-      const keys = [
-        navigator.platform,      // 作業系統 (Win/Mac/Linux)
-        navigator.hardwareConcurrency, // CPU核心數
-        screen.width + 'x' + screen.height, // 屏幕分辨率
-        navigator.deviceMemory || '1' // 記憶體大小 (GB)
-      ];
-      let hash = 0;
-      keys.join('|').split('').forEach((char) => {
-        hash = (hash << 5) - hash + char.charCodeAt(0);
-        hash |= 0;
-      });
-      return Math.abs(hash).toString(36).slice(0, 8);
-    }
-
-    // 4. 生成今日唯一索引
-    function getDailyIndex() {
-      const today = new Date();
-      const dateSeed = [
-        today.getFullYear(),
-        String(today.getMonth() + 1).padStart(2, '0'),
-        String(today.getDate()).padStart(2, '0')
-      ].join('');
-      
-      const seed = getDeviceFingerprint() + dateSeed;
-      let index = 0;
-      for (let i = 0; i < seed.length; i++) {
-        index = (index << 5) - index + seed.charCodeAt(i);
-        index |= 0;
+      // 3. 跨瀏覽器設備指紋生成
+      function getDeviceFingerprint() {
+        const keys = [
+          navigator.platform,
+          navigator.hardwareConcurrency,
+          screen.width + 'x' + screen.height,
+          navigator.deviceMemory || '1'
+        ];
+        let hash = 0;
+        keys.join('|').split('').forEach((char) => {
+          hash = (hash << 5) - hash + char.charCodeAt(0);
+          hash |= 0;
+        });
+        return Math.abs(hash).toString(36).slice(0, 8);
       }
-      return Math.abs(index) % verses.length;
-    }
+
+      // 4. 生成今日唯一索引
+      function getDailyIndex() {
+        const today = new Date();
+        const dateSeed = [
+          today.getFullYear(),
+          String(today.getMonth() + 1).padStart(2, '0'),
+          String(today.getDate()).padStart(2, '0')
+        ].join('');
+        
+        const seed = getDeviceFingerprint() + dateSeed;
+        let index = 0;
+        for (let i = 0; i < seed.length; i++) {
+          index = (index << 5) - index + seed.charCodeAt(i);
+          index |= 0;
+        }
+        return Math.abs(index) % verses.length;
+      }
 
     // 5. 顯示經文
     const index = getDailyIndex();
