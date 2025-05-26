@@ -64,7 +64,7 @@
       background-color: #d0d0d0;
     }
 
-    /* ✨ 新增 NFC 掃描面板樣式 */
+    /* Android NFC 掃描面板樣式 */
     .nfc-panel {
       display: none;
       position: fixed;
@@ -109,23 +109,6 @@
       margin-top: 20px;
       text-align: center;
     }
-    
-    /* +++ 新增 iOS 提示樣式 +++ */
-    .nfc-ios-hint {
-      display: none;
-      background: rgba(255,255,255,0.2);
-      padding: 12px;
-      border-radius: 8px;
-      margin: 15px 20px 0;
-      font-size: 0.9rem;
-      max-width: 80%;
-      text-align: center;
-    }
-    .ios .nfc-ios-hint {
-      display: block;
-    }
-    
-    /* +++ 新增跳過按鈕樣式 +++ */
     #skipNfc {
       margin-top: 25px;
       background: none;
@@ -144,15 +127,12 @@
   </style>
 </head>
 <body>
-  <!-- ✨ 修改後的 NFC 掃描面板 -->
+  <!-- 僅 Android 顯示的 NFC 面板 -->
   <div class="nfc-panel" id="nfcPanel">
     <div class="nfc-animation">
       <div class="nfc-phone"></div>
     </div>
     <p>請將手機靠近NFC標籤</p>
-    <div class="nfc-ios-hint">
-      ⓘ 在 iOS 系統上，掃描成功後請點擊通知打開經文
-    </div>
     <p class="nfc-error" id="nfcError"></p>
     <button id="skipNfc">直接顯示經文</button>
   </div>
@@ -169,33 +149,24 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // +++ 新增設備類型檢測 +++
-      const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
-      if (isIOS) {
-        document.documentElement.classList.add('ios');
-      }
-      
       const nfcPanel = document.getElementById('nfcPanel');
       const nfcError = document.getElementById('nfcError');
       const verseBox = document.getElementById('verseBox');
       const loader = document.getElementById('loader');
       const skipNfcBtn = document.getElementById('skipNfc');
+      const isAndroid = /Android/i.test(navigator.userAgent);
 
-      // +++ 修改後的 NFC 初始化函數 +++
+      // Android NFC 功能
       function initNFC() {
-        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-        if (!isMobile) {
-          throw new Error('請使用手機瀏覽器');
-        }
-
-        // iOS 只顯示提示，不實際啟用 NFC
-        if (isIOS) {
-          nfcError.innerHTML = 'iOS 需點擊通知<br><small>(系統限制)</small>';
+        if (!isAndroid) {
+          showVerse(); // 非 Android 直接顯示經文
           return;
         }
 
         if (!('NDEFReader' in window)) {
-          throw new Error('請使用 Chrome 瀏覽器');
+          nfcError.textContent = '請使用 Chrome 瀏覽器';
+          setTimeout(showVerse, 2000);
+          return;
         }
 
         const ndef = new NDEFReader();
@@ -238,9 +209,8 @@
           });
       }
 
-      // +++ 修改後的顯示經文函數 +++
       function showVerse() {
-        nfcPanel.style.display = 'none';
+        if (nfcPanel) nfcPanel.style.display = 'none';
         verseBox.style.display = 'block';
         loader.style.display = 'block';
 
@@ -260,22 +230,55 @@
         loader.style.display = 'none';
       }
 
-      // +++ 新增跳過 NFC 按鈕事件 +++
-      skipNfcBtn.addEventListener('click', () => {
-        nfcError.textContent = '已跳過 NFC 掃描';
-        showVerse();
-      });
+      skipNfcBtn.addEventListener('click', showVerse);
 
       // 初始化
-      try {
-        initNFC();
-        nfcPanel.style.display = 'flex';
-        verseBox.style.display = 'none';
-      } catch (err) {
-        console.warn("NFC初始化失敗:", err);
-        nfcError.textContent = err.message;
-        setTimeout(() => showVerse(), 1500);
+      if (isAndroid) {
+        try {
+          initNFC();
+          nfcPanel.style.display = 'flex';
+          verseBox.style.display = 'none';
+        } catch (err) {
+          console.warn("NFC初始化失敗:", err);
+          nfcError.textContent = 'NFC 初始化失敗';
+          setTimeout(showVerse, 1500);
+        }
+      } else {
+        showVerse(); // 非 Android 直接顯示
       }
+
+      function getDeviceFingerprint() {
+        const keys = [
+          navigator.platform,
+          navigator.hardwareConcurrency,
+          screen.width + 'x' + screen.height,
+          navigator.deviceMemory || '1'
+        ];
+        let hash = 0;
+        keys.join('|').split('').forEach((char) => {
+          hash = (hash << 5) - hash + char.charCodeAt(0);
+          hash |= 0;
+        });
+        return Math.abs(hash).toString(36).slice(0, 8);
+      }
+
+      function getDailyIndex() {
+        const today = new Date();
+        const dateSeed = [
+          today.getFullYear(),
+          String(today.getMonth() + 1).padStart(2, '0'),
+          String(today.getDate()).padStart(2, '0')
+        ].join('');
+        
+        const seed = getDeviceFingerprint() + dateSeed;
+        let index = 0;
+        for (let i = 0; i < seed.length; i++) {
+          index = (index << 5) - index + seed.charCodeAt(i);
+          index |= 0;
+        }
+        return Math.abs(index) % verses.length;
+      }
+
 
         // 完整的經文數據 (已驗證格式)
       const verses = [
