@@ -128,54 +128,6 @@
     #skipNfc:hover {
       background: rgba(255,255,255,0.1);
     }
-    .favorite-btn {
-      background: #ff6b6b;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 8px;
-      margin-top: 15px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .favorite-btn:hover {
-      background: #ff5252;
-      transform: scale(1.05);
-    }
-    .floating-btn {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      font-size: 20px;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      z-index: 1000;
-    }
-    #favoritesPanel {
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
-    }
-    .favorite-item {
-      background: rgba(255,255,255,0.7);
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-    }
-    .remove-btn {
-      background: #ccc;
-      color: black;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -192,34 +144,16 @@
   <div class="verse-box" id="verseBox">
     <div id="verse" class="verse"></div>
     <div id="reference" class="reference"></div>
-
-    <!-- 收藏按鈕 -->
-    <button id="favoriteBtn" class="favorite-btn">❤️ 收藏經文</button>
-
-    <!-- 分享按鈕 -->
     <div class="share-buttons">
       <a href="#" id="share-line" target="_blank">分享到 LINE</a>
       <a href="#" id="share-fb" target="_blank">分享到 Facebook</a>
     </div>
-
-    <!-- 收藏列表 -->
-    <div id="favoritesPanel" style="display:none;">
-      <h3>我的收藏</h3>
-      <div id="favoritesList"></div>
-      <button id="closeFavorites">關閉收藏列表</button>
-    </div>
   </div>
-
-  <!-- 浮動收藏清單按鈕 -->
-  <button id="showFavorites" class="floating-btn">📖 我的收藏</button>
 
   <div id="loader" class="loader">載入中...</div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-
-       let currentVerse = null;
-      
       const nfcPanel = document.getElementById('nfcPanel');
       const nfcError = document.getElementById('nfcError');
       const verseBox = document.getElementById('verseBox');
@@ -573,7 +507,7 @@
   }
       ];
 
-      // 取得裝置指紋
+     // 設備指紋生成
       function getDeviceFingerprint() {
         const keys = [
           navigator.platform,
@@ -589,7 +523,7 @@
         return Math.abs(hash).toString(36).slice(0, 8);
       }
 
-      // 根據日期和裝置指紋計算今日經文索引
+      // 生成今日唯一索引
       function getDailyIndex() {
         const today = new Date();
         const dateSeed = [
@@ -613,74 +547,6 @@
           showVerse();
           return;
         }
-        // 儲存收藏到 localStorage
-function saveFavorite(verse) {
-  try {
-    const favorites = loadFavorites();
-    const exists = favorites.some(fav => 
-      fav.text === verse.text && fav.ref === verse.ref
-    );
-    
-    if (!exists) {
-      favorites.push({
-        text: verse.text,
-        ref: verse.ref,
-        date: new Date().toISOString()
-      });
-      localStorage.setItem('favorites', JSON.stringify(favorites));
-    }
-  } catch (e) {
-    console.error('儲存收藏失敗:', e);
-    alert('無法儲存收藏，請檢查瀏覽器設定');
-  }
-}
-
-// 讀取收藏
-function loadFavorites() {
-  try {
-    return JSON.parse(localStorage.getItem('favorites')) || [];
-  } catch (e) {
-    return [];
-  }
-}
-
-// 刪除收藏
-function removeFavorite(index) {
-  const favorites = loadFavorites();
-  favorites.splice(index, 1);
-  localStorage.setItem('favorites', JSON.stringify(favorites));
-  renderFavorites();
-}
-
-// 渲染收藏列表
-function renderFavorites() {
-  const favorites = loadFavorites();
-  if (favorites.length === 0) {
-    favoritesList.innerHTML = '<p>尚未收藏任何經文</p>';
-    return;
-  }
-  
-  favoritesList.innerHTML = favorites.map((fav, index) => {
-    const date = new Date(fav.date);
-    const formattedDate = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
-    
-    return `
-      <div class="favorite-item">
-        <p>${fav.text}</p>
-        <small>${fav.ref} • ${formattedDate}</small><br/>
-        <button data-index="${index}" class="remove-btn">刪除</button>
-      </div>
-    `;
-  }).join('');
-
-  // 綁定刪除按鈕事件
-  document.querySelectorAll('.remove-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const index = parseInt(this.getAttribute('data-index'));
-      removeFavorite(index);
-    });
-  });
-}
 
         // 先檢查瀏覽器是否支持Web NFC
         if (!('NDEFReader' in window)) {
@@ -747,34 +613,17 @@ function renderFavorites() {
 
       // 顯示經文 (修正分享功能)
       function showVerse() {
-  try {
-    if (nfcPanel) nfcPanel.style.display = 'none';
-    loader.style.display = 'block';
-    verseBox.style.display = 'none';
+        try {
+          if (nfcPanel) nfcPanel.style.display = 'none';
+          loader.style.display = 'block';
+          verseBox.style.display = 'none';
 
-    const index = getDailyIndex();
-    currentVerse = verses[index]; // 確保更新 currentVerse
-    const verseText = verses[index].text;
-    const verseRef = verses[index].ref;
-    
-    document.getElementById('verse').textContent = verseText;
-    document.getElementById('reference').textContent = verseRef;
-    
-    const shareContent = encodeURIComponent(`${verseText}\n\n——${verseRef}`);
-    document.getElementById('share-line').href = 
-      `https://line.me/R/msg/text/?${shareContent}`;
-    document.getElementById('share-fb').href = 
-      `https://www.facebook.com/sharer/sharer.php?quote=${shareContent}`;
-
-    setTimeout(() => {
-      loader.style.display = 'none';
-      verseBox.style.display = 'block';
-    }, 300);
-  } catch (error) {
-    console.error("顯示經文時出錯:", error);
-    loader.textContent = "載入失敗，請刷新頁面";
-  }
-}
+          const index = getDailyIndex();
+          const verseText = verses[index].text;
+          const verseRef = verses[index].ref;
+          
+          document.getElementById('verse').textContent = verseText;
+          document.getElementById('reference').textContent = verseRef;
           
           // 只分享經文內容，不包含連結
           const shareContent = encodeURIComponent(`${verseText}\n\n——${verseRef}`);
@@ -800,89 +649,6 @@ function renderFavorites() {
 
       // 跳過NFC按鈕事件
       skipNfcBtn.addEventListener('click', showVerse);
-       // ===== 收藏功能核心代碼 =====
-      const favoriteBtn = document.getElementById('favoriteBtn');
-      const showFavoritesBtn = document.getElementById('showFavorites');
-      const favoritesPanel = document.getElementById('favoritesPanel');
-      const favoritesList = document.getElementById('favoritesList');
-      const closeFavoritesBtn = document.getElementById('closeFavorites');
-
-      let currentVerse = null;
-
-     // 收藏按鈕事件
-favoriteBtn.addEventListener('click', () => {
-  if (!currentVerse) {
-    console.error('沒有可收藏的經文');
-    return;
-  }
-
-  saveFavorite(currentVerse);
-  favoriteBtn.textContent = '✓ 已收藏';
-  favoriteBtn.style.background = '#4CAF50';
-  
-  setTimeout(() => {
-    favoriteBtn.textContent = '❤️ 收藏經文';
-    favoriteBtn.style.background = '#ff6b6b';
-  }, 1500);
-});
-
-// 查看收藏按鈕
-showFavoritesBtn.addEventListener('click', () => {
-  renderFavorites();
-  verseBox.style.display = 'none';
-  favoritesPanel.style.display = 'block';
-});
-
-// 關閉收藏按鈕
-closeFavoritesBtn.addEventListener('click', () => {
-  favoritesPanel.style.display = 'none';
-  verseBox.style.display = 'block';
-});
-
-      // 儲存收藏到 localStorage
-      function saveFavorite(verse) {
-        const favorites = loadFavorites();
-        const exists = favorites.some(fav =>
-          fav.text === verse.text && fav.ref === verse.ref
-        );
-        if (!exists) {
-          favorites.push({
-            text: verse.text,
-            ref: verse.ref,
-            date: new Date().toISOString()
-          });
-          localStorage.setItem('favorites', JSON.stringify(favorites));
-        }
-      }
-
-      // 讀取收藏
-      function loadFavorites() {
-        return JSON.parse(localStorage.getItem('favorites')) || [];
-      }
-
-      // 刪除收藏
-      function removeFavorite(index) {
-        const favorites = loadFavorites();
-        favorites.splice(index, 1);
-        localStorage.setItem('favorites', JSON.stringify(favorites));
-        renderFavorites(); // 重新渲染
-      }
-
-      // 渲染收藏列表
-      function renderFavorites() {
-        const favorites = loadFavorites();
-        if (favorites.length === 0) {
-          favoritesList.innerHTML = '<p>尚未收藏任何經文</p>';
-          return;
-        }
-        favoritesList.innerHTML = favorites.map((fav, index) => `
-          <div class="favorite-item">
-            <p>${fav.text}</p>
-            <small>${fav.ref} • ${new Date(fav.date).toLocaleDateString()}</small><br/>
-            <button onclick="removeFavorite(${index})" class="remove-btn">刪除</button>
-          </div>
-        `).join('');
-      }
 
       // 初始化
       if (isAndroid) {
