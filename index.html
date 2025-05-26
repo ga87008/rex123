@@ -144,7 +144,7 @@
     }
     .floating-btn {
       position: fixed;
-      bottom: 20px;
+      bottom: 80px;
       right: 20px;
       background: #4CAF50;
       color: white;
@@ -682,6 +682,7 @@
           verseBox.style.display = 'none';
 
           const index = getDailyIndex();
+          currentVerse = verses[index];
           const verseText = verses[index].text;
           const verseRef = verses[index].ref;
           
