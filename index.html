@@ -25,6 +25,7 @@
       width: 600px;
       text-align: center;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      display: none; /* 初始隱藏 */
     }
     .verse {
       font-size: 1.4rem;
@@ -40,9 +41,12 @@
       margin-top: 20px;
     }
     .loader {
-      display: none;
       font-size: 1.2rem;
       color: #666;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
     .share-buttons {
       margin-top: 20px;
@@ -144,8 +148,9 @@
       <a href="#" id="share-line" target="_blank">分享到 LINE</a>
       <a href="#" id="share-fb" target="_blank">分享到 Facebook</a>
     </div>
-    <div id="loader" class="loader">載入中...</div>
   </div>
+
+  <div id="loader" class="loader">載入中...</div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -155,129 +160,6 @@
       const loader = document.getElementById('loader');
       const skipNfcBtn = document.getElementById('skipNfc');
       const isAndroid = /Android/i.test(navigator.userAgent);
-
-      // Android NFC 功能
-      function initNFC() {
-        if (!isAndroid) {
-          showVerse(); // 非 Android 直接顯示經文
-          return;
-        }
-
-        if (!('NDEFReader' in window)) {
-          nfcError.textContent = '請使用 Chrome 瀏覽器';
-          setTimeout(showVerse, 2000);
-          return;
-        }
-
-        const ndef = new NDEFReader();
-        let nfcTimeout;
-        let alreadyRead = false;
-        
-        // 10 秒超時處理
-        nfcTimeout = setTimeout(() => {
-          nfcError.textContent = '掃描超時，自動顯示經文';
-          showVerse();
-        }, 10000);
-
-        ndef.scan()
-          .then(() => {
-            ndef.addEventListener('reading', ({ message }) => {
-              if (alreadyRead) return;
-              alreadyRead = true;
-              
-              clearTimeout(nfcTimeout);
-              console.log("NFC 掃描成功", message);
-              showVerse();
-              
-              // 自動關閉 NFC 連接
-              setTimeout(() => {
-                try { ndef.stop(); } catch(e) { console.log("NFC 正常結束"); }
-              }, 500);
-            });
-            
-            ndef.addEventListener('readingerror', () => {
-              clearTimeout(nfcTimeout);
-              nfcError.textContent = '讀取失敗，請重試';
-              setTimeout(showVerse, 2000);
-            });
-          })
-          .catch(err => {
-            clearTimeout(nfcTimeout);
-            console.error("NFC 錯誤:", err);
-            nfcError.textContent = 'NFC 功能不可用';
-            setTimeout(showVerse, 1500);
-          });
-      }
-
-      function showVerse() {
-        if (nfcPanel) nfcPanel.style.display = 'none';
-        verseBox.style.display = 'block';
-        loader.style.display = 'block';
-
-        const index = getDailyIndex();
-        document.getElementById('verse').textContent = verses[index].text;
-        document.getElementById('reference').textContent = verses[index].ref;
-        
-        const shareText = encodeURIComponent(
-          `${verses[index].text}\n\n——${verses[index].ref}`
-        );
-        const shareUrl = encodeURIComponent(window.location.href);
-        document.getElementById('share-line').href = 
-          `https://line.me/R/msg/text/?${shareText}%0A%0A${shareUrl}`;
-        document.getElementById('share-fb').href = 
-          `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`;
-
-        loader.style.display = 'none';
-      }
-
-      skipNfcBtn.addEventListener('click', showVerse);
-
-      // 初始化
-      if (isAndroid) {
-        try {
-          initNFC();
-          nfcPanel.style.display = 'flex';
-          verseBox.style.display = 'none';
-        } catch (err) {
-          console.warn("NFC初始化失敗:", err);
-          nfcError.textContent = 'NFC 初始化失敗';
-          setTimeout(showVerse, 1500);
-        }
-      } else {
-        showVerse(); // 非 Android 直接顯示
-      }
-
-      function getDeviceFingerprint() {
-        const keys = [
-          navigator.platform,
-          navigator.hardwareConcurrency,
-          screen.width + 'x' + screen.height,
-          navigator.deviceMemory || '1'
-        ];
-        let hash = 0;
-        keys.join('|').split('').forEach((char) => {
-          hash = (hash << 5) - hash + char.charCodeAt(0);
-          hash |= 0;
-        });
-        return Math.abs(hash).toString(36).slice(0, 8);
-      }
-
-      function getDailyIndex() {
-        const today = new Date();
-        const dateSeed = [
-          today.getFullYear(),
-          String(today.getMonth() + 1).padStart(2, '0'),
-          String(today.getDate()).padStart(2, '0')
-        ].join('');
-        
-        const seed = getDeviceFingerprint() + dateSeed;
-        let index = 0;
-        for (let i = 0; i < seed.length; i++) {
-          index = (index << 5) - index + seed.charCodeAt(i);
-          index |= 0;
-        }
-        return Math.abs(index) % verses.length;
-      }
 
 
         // 完整的經文數據 (已驗證格式)
@@ -625,8 +507,7 @@
   }
       ];
 
-      // 3. 跨瀏覽器設備指紋生成
-      function getDeviceFingerprint() {
+    function getDeviceFingerprint() {
         const keys = [
           navigator.platform,
           navigator.hardwareConcurrency,
@@ -641,7 +522,7 @@
         return Math.abs(hash).toString(36).slice(0, 8);
       }
 
-      // 4. 生成今日唯一索引
+      // 生成今日唯一索引
       function getDailyIndex() {
         const today = new Date();
         const dateSeed = [
@@ -659,24 +540,108 @@
         return Math.abs(index) % verses.length;
       }
 
-    // 5. 顯示經文
-    const index = getDailyIndex();
-    document.getElementById('verse').textContent = verses[index].text;
-    document.getElementById('reference').textContent = verses[index].ref;
+      // Android NFC 功能
+      function initNFC() {
+        if (!isAndroid) {
+          showVerse(); // 非 Android 直接顯示經文
+          return;
+        }
 
-    // 6. 設定分享按鈕
-    const shareText = encodeURIComponent(
-      `${verses[index].text}\n\n——${verses[index].ref}`
-    );
-    const shareUrl = encodeURIComponent(window.location.href);
-    document.getElementById('share-line').href = 
-      `https://line.me/R/msg/text/?${shareText}%0A%0A${shareUrl}`;
-    document.getElementById('share-fb').href = 
-      `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`;
+        if (!('NDEFReader' in window)) {
+          nfcError.textContent = '請使用 Chrome 瀏覽器';
+          setTimeout(showVerse, 2000);
+          return;
+        }
 
-    // 7. 隱藏載入中
-    document.getElementById('loader').style.display = 'none';
-  });
-</script>
- </body>
+        const ndef = new NDEFReader();
+        let nfcTimeout;
+        let alreadyRead = false;
+        
+        // 10 秒超時處理
+        nfcTimeout = setTimeout(() => {
+          nfcError.textContent = '掃描超時，自動顯示經文';
+          showVerse();
+        }, 10000);
+
+        ndef.scan()
+          .then(() => {
+            ndef.addEventListener('reading', ({ message }) => {
+              if (alreadyRead) return;
+              alreadyRead = true;
+              
+              clearTimeout(nfcTimeout);
+              console.log("NFC 掃描成功", message);
+              showVerse();
+              
+              // 自動關閉 NFC 連接
+              setTimeout(() => {
+                try { ndef.stop(); } catch(e) { console.log("NFC 正常結束"); }
+              }, 500);
+            });
+            
+            ndef.addEventListener('readingerror', () => {
+              clearTimeout(nfcTimeout);
+              nfcError.textContent = '讀取失敗，請重試';
+              setTimeout(showVerse, 2000);
+            });
+          })
+          .catch(err => {
+            clearTimeout(nfcTimeout);
+            console.error("NFC 錯誤:", err);
+            nfcError.textContent = 'NFC 功能不可用';
+            setTimeout(showVerse, 1500);
+          });
+      }
+
+      // 顯示經文
+      function showVerse() {
+        try {
+          if (nfcPanel) nfcPanel.style.display = 'none';
+          loader.style.display = 'block';
+          verseBox.style.display = 'none';
+
+          const index = getDailyIndex();
+          document.getElementById('verse').textContent = verses[index].text;
+          document.getElementById('reference').textContent = verses[index].ref;
+          
+          const shareText = encodeURIComponent(
+            `${verses[index].text}\n\n——${verses[index].ref}`
+          );
+          const shareUrl = encodeURIComponent(window.location.href);
+          document.getElementById('share-line').href = 
+            `https://line.me/R/msg/text/?${shareText}%0A%0A${shareUrl}`;
+          document.getElementById('share-fb').href = 
+            `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`;
+
+          // 短暫顯示載入效果
+          setTimeout(() => {
+            loader.style.display = 'none';
+            verseBox.style.display = 'block';
+          }, 300);
+        } catch (error) {
+          console.error("顯示經文時出錯:", error);
+          loader.textContent = "載入失敗，請刷新頁面";
+        }
+      }
+
+      // 跳過 NFC 按鈕事件
+      skipNfcBtn.addEventListener('click', showVerse);
+
+      // 初始化
+      if (isAndroid) {
+        try {
+          initNFC();
+          nfcPanel.style.display = 'flex';
+          verseBox.style.display = 'none';
+        } catch (err) {
+          console.warn("NFC初始化失敗:", err);
+          nfcError.textContent = 'NFC 初始化失敗';
+          setTimeout(showVerse, 1500);
+        }
+      } else {
+        showVerse(); // 非 Android 直接顯示
+      }
+    });
+  </script>
+</body>
 </html>
