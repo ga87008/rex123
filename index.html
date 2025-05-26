@@ -613,14 +613,19 @@
 
       // 顯示經文 (修正分享功能)
       function showVerse() {
-        try {
-          if (nfcPanel) nfcPanel.style.display = 'none';
-          loader.style.display = 'block';
-          verseBox.style.display = 'none';
+  try {
+    if (nfcPanel) nfcPanel.style.display = 'none';
+    loader.style.display = 'block';
+    verseBox.style.display = 'none';
 
-          const index = getDailyIndex();
-          const verseText = verses[index].text;
-          const verseRef = verses[index].ref;
+    const index = getDailyIndex();
+    const verseElement = document.getElementById('verse');
+    const refElement = document.getElementById('reference');
+    
+    // 先清空內容
+    verseElement.textContent = '';
+    refElement.textContent = '';
+    verseElement.style.opacity = '0'; // 初始化透明
           
           document.getElementById('verse').textContent = verseText;
           document.getElementById('reference').textContent = verseRef;
@@ -636,16 +641,67 @@
           document.getElementById('share-fb').href = 
             `https://www.facebook.com/sharer/sharer.php?quote=${shareContent}`;
 
-          // 短暫顯示載入效果
-          setTimeout(() => {
-            loader.style.display = 'none';
-            verseBox.style.display = 'block';
-          }, 300);
-        } catch (error) {
-          console.error("顯示經文時出錯:", error);
-          loader.textContent = "載入失敗，請刷新頁面";
-        }
+          // 短暫延遲後開始動畫
+    setTimeout(() => {
+      // 經文打字機效果
+      animateTypewriter(verseElement, verses[index].text);
+      
+      // 出處淡入效果
+      refElement.style.opacity = '0';
+      refElement.textContent = verses[index].ref;
+      fadeIn(refElement);
+      
+      // 顯示容器
+      loader.style.display = 'none';
+      verseBox.style.display = 'block';
+    }, 300);
+  } catch (error) {
+    console.error("顯示經文時出錯:", error);
+    loader.textContent = "載入失敗，請刷新頁面";
+  }
+}
+      // 打字機動畫函數
+function animateTypewriter(element, text, speed = 30) {
+  let i = 0;
+  element.textContent = '';
+  const timer = setInterval(() => {
+    if (i < text.length) {
+      // 處理中文和標點符號的停頓
+      const char = text.charAt(i);
+      element.textContent += char;
+      i++;
+      
+      // 標點符號稍作停頓
+      if (/[，。！？]/.test(char)) {
+        clearInterval(timer);
+        setTimeout(() => {
+          animateTypewriter(element, text, speed).startFrom(i);
+        }, 300);
       }
+    } else {
+      clearInterval(timer);
+      fadeIn(element); // 完成後觸發淡入強化效果
+    }
+  }, speed);
+}
+
+// 淡入動畫函數
+function fadeIn(element, duration = 1000) {
+  let opacity = 0;
+  const start = performance.now();
+  
+  function step(timestamp) {
+    const progress = (timestamp - start) / duration;
+    opacity = Math.min(progress, 1);
+    element.style.opacity = opacity;
+    
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+  
+  requestAnimationFrame(step);
+}
 
       // 跳過NFC按鈕事件
       skipNfcBtn.addEventListener('click', showVerse);
