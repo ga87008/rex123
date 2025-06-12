@@ -39,12 +39,20 @@
   margin-bottom: 20px;
   text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.1); /* 模擬墨水暈染 */
 }
-    .verse {
-  background: linear-gradient(to right, #555, #333);
+   .verse {
+  /* 墨色效果 */
+  background: linear-gradient(to right, #5D2906, #8B4513);
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent; /* 模擬墨水深淺 */
-  filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.1));
+  color: transparent;
+  filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.15));
+
+  /* 動畫效果 */
+  animation: handWriting 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  
+  /* 字體強化 */
+  font-weight: 500;
+  text-rendering: geometricPrecision;
 }
     @keyframes handWriting {
   0% { opacity: 0; }
