@@ -39,6 +39,22 @@
   margin-bottom: 20px;
   text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.1); /* 模擬墨水暈染 */
 }
+    .verse {
+  background: linear-gradient(to right, #555, #333);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent; /* 模擬墨水深淺 */
+  filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.1));
+}
+    @keyframes handWriting {
+  0% { opacity: 0; }
+  50% { opacity: 0.5; letter-spacing: 0.1em; }
+  100% { opacity: 1; }
+}
+
+.verse {
+  animation: handWriting 1.5s ease-out forwards;
+}
     .reference {
       font-size: 1.1rem;
       color: #555;
