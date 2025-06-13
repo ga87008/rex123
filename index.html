@@ -38,16 +38,18 @@
       margin-bottom: 20px;
       position: relative;
       text-align: left;
-      
+      white-space: pre-line; /* 保留換行但合併空格 */
     }
     .verse .salutation {
       display: block;
       margin-bottom: 0.5em;
+      text-align: left; /* 確保稱謂左對齊 */
     }
     .verse .content {
       display: block;
-      padding-left: 2em;
-      text-indent: -2em;
+      padding-left: 0; /* 移除原本的2em縮進 */
+      text-indent: 0;  /* 移除負縮進 */
+      margin-left: 0;  /* 確保沒有額外邊距 */
     }
     .verse span.char {
       display: inline-block;
@@ -676,7 +678,7 @@
         return Math.abs(hash).toString(36).slice(0, 8);
       }
 
-      // 生成今日唯一索引
+      // 生成今日唯一索引 (已添加範圍檢查)
       function getDailyIndex() {
         const today = new Date();
         const dateSeed = [
@@ -694,7 +696,7 @@
         return Math.abs(index) % verses.length;
       }
 
-      // 書信式排版處理
+      // 書信式排版處理 (已修正換行邏輯)
       function formatLetterText(text) {
         // 處理稱謂
         let salutation = '';
@@ -706,22 +708,13 @@
         } else if (text.startsWith('孩子，')) {
           salutation = '孩子：';
           content = text.slice(3);
+        } else if (text.startsWith('孩子：')) {
+          salutation = '孩子：';
+          content = text.slice(3);
         }
         
-        // 處理15字換行
-        let formattedContent = '';
-        let lineLength = 0;
-        
-        for (let i = 0; i < content.length; i++) {
-          formattedContent += content[i];
-          lineLength++;
-          
-          // 15字換行（含標點符號）
-          if (lineLength >= 15 && (i === content.length-1 || /[，。、]/.test(content[i+1]))) {
-            formattedContent += '\n';
-            lineLength = 0;
-          }
-        }
+        // 處理換行（保留原始換行符）
+        let formattedContent = content;
         
         return {
           salutation: salutation,
@@ -729,7 +722,7 @@
         };
       }
 
-      // 鋼筆逐字動畫 (書信版)
+      // 鋼筆逐字動畫 (書信版) (已修正排版問題)
       function animateLetterWriting(element, text) {
         element.innerHTML = '';
         
@@ -737,26 +730,27 @@
         const formatted = formatLetterText(text);
         
         // 添加稱謂
-        const salutationDiv = document.createElement('div');
-        salutationDiv.className = 'salutation';
-        element.appendChild(salutationDiv);
+        if (formatted.salutation) {
+          const salutationDiv = document.createElement('div');
+          salutationDiv.className = 'salutation';
+          element.appendChild(salutationDiv);
+          
+          formatted.salutation.split('').forEach((char, index) => {
+            const span = document.createElement('span');
+            span.className = 'char';
+            span.textContent = char;
+            salutationDiv.appendChild(span);
+            
+            setTimeout(() => {
+              span.style.animation = 'penStroke 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards';
+            }, index * 150);
+          });
+        }
         
         // 添加內容
         const contentDiv = document.createElement('div');
         contentDiv.className = 'content';
         element.appendChild(contentDiv);
-        
-        // 處理稱謂動畫
-        formatted.salutation.split('').forEach((char, index) => {
-          const span = document.createElement('span');
-          span.className = 'char';
-          span.textContent = char;
-          salutationDiv.appendChild(span);
-          
-          setTimeout(() => {
-            span.style.animation = 'penStroke 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards';
-          }, index * 150);
-        });
         
         // 處理內容動畫
         let charIndex = 0;
@@ -771,14 +765,14 @@
             
             setTimeout(() => {
               span.style.animation = 'penStroke 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards';
-            }, (formatted.salutation.length * 150) + (charIndex * 150));
+            }, (formatted.salutation ? formatted.salutation.length * 150 : 0) + (charIndex * 150));
             
             charIndex++;
           }
         });
       }
 
-      // 顯示經文
+      // 顯示經文 (已添加錯誤處理)
       function showVerse() {
         try {
           if (nfcPanel) nfcPanel.style.display = 'none';
@@ -786,6 +780,8 @@
           verseBox.style.display = 'none';
 
           const index = getDailyIndex();
+          console.log('Showing verse index:', index, verses[index]); // 調試用
+          
           const verseElement = document.getElementById('verse');
           const refElement = document.getElementById('reference');
           
@@ -819,6 +815,7 @@
         } catch (error) {
           console.error("顯示經文時出錯:", error);
           loader.textContent = "載入失敗，請刷新頁面";
+          verseBox.style.display = 'none';
         }
       }
 
