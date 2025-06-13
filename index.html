@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>天父的話</title>
- <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Iansui&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Iansui&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -31,43 +31,58 @@
       display: none;
     }
     .verse {
-  font-family: 'Iansui', 'Noto Sans TC', cursive; /* 優先使用芫荽體 */
-  font-size: 1.5rem; /* 稍大字號更顯手寫感 */
-  line-height: 1.8;  /* 增加行距 */
-  letter-spacing: 0.05em; /* 字距微調 */
-  color: #333;
-  margin-bottom: 20px;
-  text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.1); /* 模擬墨水暈染 */
-}
-   .verse {
-  /* 墨色效果 */
-  background: linear-gradient(to right, #5D2906, #8B4513);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.15));
-
-  /* 動畫效果 */
-  animation: handWriting 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  
-  /* 字體強化 */
-  font-weight: 500;
-  text-rendering: geometricPrecision;
-}
-    @keyframes handWriting {
-  0% { opacity: 0; }
-  50% { opacity: 0.5; letter-spacing: 0.1em; }
-  100% { opacity: 1; }
-}
-
-.verse {
-  animation: handWriting 1.5s ease-out forwards;
-}
+      font-family: 'Iansui', 'Noto Sans TC', cursive;
+      font-size: 1.5rem;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .verse span.char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(10px);
+      background: linear-gradient(to bottom, #1a1a1a, #333);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
+    }
+    .verse span.char::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: rgba(0,0,0,0.1);
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+    @keyframes penStroke {
+      0% { 
+        opacity: 0;
+        transform: translateY(10px) scaleY(0.8);
+      }
+      50% {
+        opacity: 0.7;
+        transform: translateY(0) scaleY(1.1);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+      }
+    }
     .reference {
       font-size: 1.1rem;
       color: #555;
       font-style: italic;
       margin-top: 20px;
+      opacity: 0;
+      animation: fadeIn 0.5s ease-out 1s forwards;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
     }
     .loader {
       font-size: 1.2rem;
@@ -83,6 +98,8 @@
       justify-content: center;
       gap: 12px;
       flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeIn 0.5s ease-out 1.5s forwards;
     }
     .share-buttons a {
       background-color: #e0e0e0;
@@ -96,7 +113,6 @@
     .share-buttons a:hover {
       background-color: #d0d0d0;
     }
-
     /* Android NFC 掃描面板樣式 */
     .nfc-panel {
       display: none;
@@ -677,6 +693,35 @@
         }
         return Math.abs(index) % verses.length;
       }
+       // 鋼筆逐字動畫
+      function animatePenWriting(element, text) {
+        element.innerHTML = text.split('').map(char => 
+          `<span class="char">${char}</span>`
+        ).join('');
+
+        const chars = element.querySelectorAll('.char');
+        let delay = 0;
+
+        chars.forEach((char, index) => {
+          const isPunctuation = /[，。、]/.test(char.textContent);
+          const duration = isPunctuation ? 0.4 : 0.15;
+          
+          setTimeout(() => {
+            char.style.animation = `penStroke 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s forwards`;
+            
+            // 墨水暈染效果
+            setTimeout(() => {
+              char.style.transform = 'translateY(0)';
+              if (char.nextElementSibling) {
+                char.style.setProperty('--ink', 'scaleX(1)');
+              }
+            }, 100);
+          }, delay * 1000);
+
+          delay += duration;
+        });
+      }
+
 
       // Android NFC 功能 (修正版)
       function initNFC() {
