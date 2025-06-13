@@ -53,7 +53,7 @@
       filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
     }
     .verse span.char.punctuation {
-      animation-duration: 0.3s !important; /* 標點符號動畫更快 */
+      animation-duration: 0.5s !important; /* 標點符號動畫更快 */
     }
     @keyframes penStroke {
       0% { 
@@ -702,7 +702,7 @@
           charCount++;
           // 中文標點不算入字數
           if (/[，。、]/.test(text[i])) charCount--;
-          if (charCount >= 15 && /[，。、]/.test(text[i+1])) {
+          if (charCount >= 20 && /[，。、]/.test(text[i+1])) {
             formattedText += '\n';
             charCount = 0;
           }
