@@ -79,7 +79,7 @@
       font-style: italic;
       margin-top: 20px;
       opacity: 0;
-      animation: fadeIn 0.5s ease-out 1s forwards;
+      animation: fadeIn 0.5s ease-out forwards;
     }
     @keyframes fadeIn {
       to { opacity: 1; }
@@ -99,7 +99,7 @@
       gap: 12px;
       flex-wrap: wrap;
       opacity: 0;
-      animation: fadeIn 0.5s ease-out 1.5s forwards;
+      animation: fadeIn 0.5s ease-out forwards;
     }
     .share-buttons a {
       background-color: #e0e0e0;
@@ -693,107 +693,35 @@
         }
         return Math.abs(index) % verses.length;
       }
-       // 鋼筆逐字動畫
+
+      // 鋼筆逐字動畫 (修正版)
       function animatePenWriting(element, text) {
-        element.innerHTML = text.split('').map(char => 
-          `<span class="char">${char}</span>`
-        ).join('');
+        // 先清空內容
+        element.innerHTML = '';
+        
+        // 分割每個字符並包裹span
+        const characters = text.split('').map(char => {
+          const span = document.createElement('span');
+          span.className = 'char';
+          span.textContent = char;
+          return span;
+        });
 
-        const chars = element.querySelectorAll('.char');
-        let delay = 0;
-
-        chars.forEach((char, index) => {
+        // 添加到DOM
+        characters.forEach(char => element.appendChild(char));
+        
+        // 逐字動畫
+        characters.forEach((char, index) => {
           const isPunctuation = /[，。、]/.test(char.textContent);
-          const duration = isPunctuation ? 0.4 : 0.15;
+          const delay = index * (isPunctuation ? 0.4 : 0.15); // 標點符號停頓更久
           
           setTimeout(() => {
-            char.style.animation = `penStroke 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s forwards`;
-            
-            // 墨水暈染效果
-            setTimeout(() => {
-              char.style.transform = 'translateY(0)';
-              if (char.nextElementSibling) {
-                char.style.setProperty('--ink', 'scaleX(1)');
-              }
-            }, 100);
+            char.style.animation = 'penStroke 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards';
           }, delay * 1000);
-
-          delay += duration;
         });
       }
 
-
-      // Android NFC 功能 (修正版)
-      function initNFC() {
-        if (!isAndroid) {
-          showVerse();
-          return;
-        }
-
-        // 先檢查瀏覽器是否支持Web NFC
-        if (!('NDEFReader' in window)) {
-          nfcError.textContent = '請使用Chrome 89+瀏覽器以獲得NFC功能';
-          setTimeout(showVerse, 2000);
-          return;
-        }
-
-        const ndef = new NDEFReader();
-        let nfcTimeout;
-        let alreadyRead = false;
-        
-        // 10秒超時處理
-        nfcTimeout = setTimeout(() => {
-          nfcError.textContent = '掃描超時，自動顯示經文';
-          showVerse();
-        }, 10000);
-
-        ndef.scan()
-          .then(() => {
-            console.log("NFC掃描已啟動，等待標籤...");
-            
-            ndef.addEventListener('reading', ({ message }) => {
-              if (alreadyRead) return;
-              alreadyRead = true;
-              
-              clearTimeout(nfcTimeout);
-              console.log("NFC標籤已讀取", message);
-              showVerse();
-              
-              // 自動關閉NFC連接
-              setTimeout(() => {
-                try { 
-                  ndef.stop().then(() => console.log("NFC掃描已停止"));
-                } catch(e) { 
-                  console.log("NFC停止錯誤:", e); 
-                }
-              }, 500);
-            });
-            
-            ndef.addEventListener('readingerror', (error) => {
-              console.error("讀取錯誤:", error);
-              clearTimeout(nfcTimeout);
-              nfcError.textContent = '讀取失敗，請重試';
-              setTimeout(showVerse, 2000);
-            });
-          })
-          .catch(err => {
-            console.error("NFC掃描啟動錯誤:", err);
-            clearTimeout(nfcTimeout);
-            
-            // 更詳細的錯誤處理
-            if (err.name === 'NotAllowedError') {
-              nfcError.textContent = '請允許NFC權限';
-            } else if (err.name === 'NotSupportedError') {
-              nfcError.textContent = '設備不支持NFC';
-            } else {
-              nfcError.textContent = 'NFC功能暫時不可用';
-            }
-            
-            setTimeout(showVerse, 1500);
-          });
-      }
-
-      // 顯示經文 (修正分享功能)
+      // 顯示經文 (修正版)
       function showVerse() {
         try {
           if (nfcPanel) nfcPanel.style.display = 'none';
@@ -801,27 +729,39 @@
           verseBox.style.display = 'none';
 
           const index = getDailyIndex();
-          const verseText = verses[index].text;
-          const verseRef = verses[index].ref;
+          const verseElement = document.getElementById('verse');
+          const refElement = document.getElementById('reference');
           
-          document.getElementById('verse').textContent = verseText;
-          document.getElementById('reference').textContent = verseRef;
+          // 清空內容
+          verseElement.innerHTML = '';
+          refElement.textContent = '';
+          refElement.style.opacity = '0';
           
-          // 只分享經文內容，不包含連結
-          const shareContent = encodeURIComponent(`${verseText}\n\n——${verseRef}`);
-          
-          // LINE分享
+          // 設置分享按鈕
+          const shareText = encodeURIComponent(
+            `${verses[index].text}\n\n——${verses[index].ref}`
+          );
           document.getElementById('share-line').href = 
-            `https://line.me/R/msg/text/?${shareContent}`;
-            
-          // Facebook分享
+            `https://line.me/R/msg/text/?${shareText}`;
           document.getElementById('share-fb').href = 
-            `https://www.facebook.com/sharer/sharer.php?quote=${shareContent}`;
+            `https://www.facebook.com/sharer/sharer.php?quote=${shareText}`;
 
-          // 短暫顯示載入效果
+          // 顯示容器
           setTimeout(() => {
             loader.style.display = 'none';
             verseBox.style.display = 'block';
+            
+            // 開始動畫
+            animatePenWriting(verseElement, verses[index].text);
+            
+            // 出處延遲顯示
+            setTimeout(() => {
+              refElement.textContent = verses[index].ref;
+              refElement.style.animation = 'fadeIn 0.5s ease-out forwards';
+              
+              // 分享按鈕延遲顯示
+              document.querySelector('.share-buttons').style.animation = 'fadeIn 0.5s ease-out forwards';
+            }, 1000 + verses[index].text.length * 100); // 根據經文長度調整延遲
           }, 300);
         } catch (error) {
           console.error("顯示經文時出錯:", error);
@@ -835,14 +775,11 @@
       // 初始化
       if (isAndroid) {
         try {
-          // 檢查是否真的支持NFC
           if ('NDEFReader' in window) {
             initNFC();
             nfcPanel.style.display = 'flex';
             verseBox.style.display = 'none';
           } else {
-            // 如果不支持NFC，直接顯示經文
-            console.log("設備不支持Web NFC");
             showVerse();
           }
         } catch (err) {
@@ -851,7 +788,57 @@
           setTimeout(showVerse, 1500);
         }
       } else {
-        showVerse(); // 非Android直接顯示
+        showVerse();
+      }
+
+      // Android NFC 功能
+      function initNFC() {
+        if (!isAndroid) {
+          showVerse();
+          return;
+        }
+
+        if (!('NDEFReader' in window)) {
+          nfcError.textContent = '請使用Chrome瀏覽器以獲得NFC功能';
+          setTimeout(showVerse, 2000);
+          return;
+        }
+
+        const ndef = new NDEFReader();
+        let nfcTimeout;
+        let alreadyRead = false;
+        
+        nfcTimeout = setTimeout(() => {
+          nfcError.textContent = '掃描超時，自動顯示經文';
+          showVerse();
+        }, 10000);
+
+        ndef.scan()
+          .then(() => {
+            ndef.addEventListener('reading', ({ message }) => {
+              if (alreadyRead) return;
+              alreadyRead = true;
+              
+              clearTimeout(nfcTimeout);
+              showVerse();
+              
+              setTimeout(() => {
+                try { ndef.stop(); } catch(e) { console.log("NFC正常結束"); }
+              }, 500);
+            });
+            
+            ndef.addEventListener('readingerror', () => {
+              clearTimeout(nfcTimeout);
+              nfcError.textContent = '讀取失敗，請重試';
+              setTimeout(showVerse, 2000);
+            });
+          })
+          .catch(err => {
+            clearTimeout(nfcTimeout);
+            console.error("NFC錯誤:", err);
+            nfcError.textContent = 'NFC功能不可用';
+            setTimeout(showVerse, 1500);
+          });
       }
     });
   </script>
