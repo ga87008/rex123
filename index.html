@@ -37,6 +37,10 @@
       color: #333;
       margin-bottom: 20px;
       position: relative;
+      text-align: justify; /* 自動兩端對齊 */
+      text-justify: inter-character; /* 字間距調整 */
+      word-wrap: break-word; /* 自動換行 */
+      white-space: pre-wrap; /* 保留換行符 */
     }
     .verse span.char {
       display: inline-block;
@@ -48,16 +52,8 @@
       color: transparent;
       filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
     }
-    .verse span.char::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: rgba(0,0,0,0.1);
-      transform: scaleX(0);
-      transform-origin: left;
+    .verse span.char.punctuation {
+      animation-duration: 0.3s !important; /* 標點符號動畫更快 */
     }
     @keyframes penStroke {
       0% { 
@@ -660,7 +656,7 @@
   }
       ];
 
-     // 設備指紋生成
+      // 設備指紋生成
       function getDeviceFingerprint() {
         const keys = [
           navigator.platform,
@@ -694,34 +690,51 @@
         return Math.abs(index) % verses.length;
       }
 
-      // 鋼筆逐字動畫 (修正版)
+      // 鋼筆逐字動畫 (修正標點符號速度)
       function animatePenWriting(element, text) {
-        // 先清空內容
         element.innerHTML = '';
         
-        // 分割每個字符並包裹span
-        const characters = text.split('').map(char => {
+        // 自動排版處理：每15個字符插入換行符
+        let formattedText = '';
+        let charCount = 0;
+        for (let i = 0; i < text.length; i++) {
+          formattedText += text[i];
+          charCount++;
+          // 中文標點不算入字數
+          if (/[，。、]/.test(text[i])) charCount--;
+          if (charCount >= 15 && /[，。、]/.test(text[i+1])) {
+            formattedText += '\n';
+            charCount = 0;
+          }
+        }
+
+        // 分割字符並添加動畫
+        const chars = formattedText.split('').map(char => {
           const span = document.createElement('span');
-          span.className = 'char';
-          span.textContent = char;
+          span.className = /[，。、]/.test(char) ? 'char punctuation' : 'char';
+          span.textContent = char === '\n' ? '<br>' : char; // 處理換行
           return span;
         });
 
-        // 添加到DOM
-        characters.forEach(char => element.appendChild(char));
-        
-        // 逐字動畫
-        characters.forEach((char, index) => {
-          const isPunctuation = /[，。、]/.test(char.textContent);
-          const delay = index * (isPunctuation ? 0.4 : 0.15); // 標點符號停頓更久
-          
+        chars.forEach(char => {
+          if (char.textContent === '<br>') {
+            element.appendChild(document.createElement('br'));
+          } else {
+            element.appendChild(char);
+          }
+        });
+
+        // 觸發動畫
+        const allChars = element.querySelectorAll('.char');
+        allChars.forEach((char, index) => {
+          const isPunctuation = char.classList.contains('punctuation');
           setTimeout(() => {
             char.style.animation = 'penStroke 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards';
-          }, delay * 1000);
+          }, index * (isPunctuation ? 100 : 150)); // 標點符號動畫間隔更短
         });
       }
 
-      // 顯示經文 (修正版)
+      // 顯示經文
       function showVerse() {
         try {
           if (nfcPanel) nfcPanel.style.display = 'none';
@@ -746,22 +759,18 @@
           document.getElementById('share-fb').href = 
             `https://www.facebook.com/sharer/sharer.php?quote=${shareText}`;
 
-          // 顯示容器
+          // 顯示容器並開始動畫
           setTimeout(() => {
             loader.style.display = 'none';
             verseBox.style.display = 'block';
-            
-            // 開始動畫
             animatePenWriting(verseElement, verses[index].text);
             
             // 出處延遲顯示
             setTimeout(() => {
               refElement.textContent = verses[index].ref;
               refElement.style.animation = 'fadeIn 0.5s ease-out forwards';
-              
-              // 分享按鈕延遲顯示
               document.querySelector('.share-buttons').style.animation = 'fadeIn 0.5s ease-out forwards';
-            }, 1000 + verses[index].text.length * 100); // 根據經文長度調整延遲
+            }, verses[index].text.length * 120); // 根據經文長度動態計算延遲
           }, 300);
         } catch (error) {
           console.error("顯示經文時出錯:", error);
