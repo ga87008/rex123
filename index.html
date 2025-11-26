@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="每日天父的話 - 透過NFC或網頁獲得每日靈修經文">
   <title>天父的話 - 每日靈修</title>
-  
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Iansui&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Iansui&family=Noto+Sans+TC:wght@300;400;500;700&display=swap"
+    rel="stylesheet">
+
   <style>
     * {
       box-sizing: border-box;
@@ -24,12 +26,11 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 20%);
       position: relative;
       overflow-x: hidden;
     }
 
-    /* 動態背景效果 */
+    /* 背景圖片 - 完全顯示,無遮罩 */
     body::before {
       content: '';
       position: fixed;
@@ -39,19 +40,6 @@
       height: 100%;
       background: url(https://raw.githubusercontent.com/ga87008/rex123/refs/heads/main/background.jpg.jpg) no-repeat center center fixed;
       background-size: cover;
-      opacity: 0.3;
-      z-index: 0;
-    }
-
-    /* 漸變遮罩 */
-    body::after {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
       z-index: 0;
     }
 
@@ -63,8 +51,8 @@
       max-width: 90%;
       width: 640px;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 
-                  0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
       display: none;
       position: relative;
       z-index: 10;
@@ -76,6 +64,7 @@
         opacity: 0;
         transform: translateY(30px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -129,18 +118,20 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      filter: drop-shadow(0.5px 0.5px 0.5px rgba(0,0,0,0.1));
+      filter: drop-shadow(0.5px 0.5px 0.5px rgba(0, 0, 0, 0.1));
     }
 
     @keyframes penStroke {
-      0% { 
+      0% {
         opacity: 0;
         transform: translateY(10px) scaleY(0.8);
       }
+
       50% {
         opacity: 0.7;
         transform: translateY(0) scaleY(1.05);
       }
+
       100% {
         opacity: 1;
         transform: translateY(0) scaleY(1);
@@ -161,7 +152,9 @@
     }
 
     @keyframes fadeIn {
-      to { opacity: 1; }
+      to {
+        opacity: 1;
+      }
     }
 
     .loader {
@@ -174,6 +167,7 @@
       z-index: 10;
       text-align: center;
       font-weight: 300;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     .loader::after {
@@ -182,9 +176,20 @@
     }
 
     @keyframes dots {
-      0%, 20% { content: '.'; }
-      40% { content: '..'; }
-      60%, 100% { content: '...'; }
+
+      0%,
+      20% {
+        content: '.';
+      }
+
+      40% {
+        content: '..';
+      }
+
+      60%,
+      100% {
+        content: '...';
+      }
     }
 
     .share-buttons {
@@ -197,7 +202,7 @@
       animation: fadeIn 0.5s ease-out forwards;
     }
 
-    .share-buttons a, 
+    .share-buttons a,
     .share-buttons button {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -212,7 +217,7 @@
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
 
-    .share-buttons a:hover, 
+    .share-buttons a:hover,
     .share-buttons button:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
@@ -274,6 +279,7 @@
         height: 60px;
         opacity: 1;
       }
+
       100% {
         width: 180px;
         height: 180px;
@@ -295,8 +301,15 @@
     }
 
     @keyframes float {
-      0%, 100% { transform: translate(-50%, -50%); }
-      50% { transform: translate(-50%, -55%); }
+
+      0%,
+      100% {
+        transform: translate(-50%, -50%);
+      }
+
+      50% {
+        transform: translate(-50%, -55%);
+      }
     }
 
     .nfc-panel p {
@@ -304,7 +317,7 @@
       font-size: 1.3rem;
       margin: 12px 0;
       font-weight: 300;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     .nfc-error {
@@ -498,6 +511,7 @@
     }
   </style>
 </head>
+
 <body>
   <!-- Android NFC 掃描面板 -->
   <div class="nfc-panel" id="nfcPanel">
@@ -544,8 +558,8 @@
   <script type="module">
     // 導入經文資料
     import verses from './verses.js';
-    
-    document.addEventListener('DOMContentLoaded', function() {
+
+    document.addEventListener('DOMContentLoaded', function () {
       const nfcPanel = document.getElementById('nfcPanel');
       const nfcError = document.getElementById('nfcError');
       const verseBox = document.getElementById('verseBox');
@@ -607,14 +621,14 @@
       // 生成今日唯一索引
       function getDailyIndex() {
         const todayKey = todayString();
-        
+
         // 檢查 localStorage 是否已有當日索引
         try {
           const stored = JSON.parse(localStorage.getItem(TODAY_KEY) || 'null');
           if (stored && stored.date === todayKey) {
             return stored.index;
           }
-        } catch(e) {
+        } catch (e) {
           console.warn('讀取今日索引失敗', e);
         }
 
@@ -622,7 +636,7 @@
         const dateSeed = todayKey;
         const deviceId = getDeviceFingerprint();
         const seed = deviceId + dateSeed;
-        
+
         let index = 0;
         for (let i = 0; i < seed.length; i++) {
           index = (index << 5) - index + seed.charCodeAt(i);
@@ -632,9 +646,9 @@
 
         // 儲存當日索引
         try {
-          localStorage.setItem(TODAY_KEY, JSON.stringify({ 
-            date: todayKey, 
-            index: index 
+          localStorage.setItem(TODAY_KEY, JSON.stringify({
+            date: todayKey,
+            index: index
           }));
         } catch (e) {
           console.warn('無法儲存今日索引', e);
@@ -647,7 +661,7 @@
       function saveToHistory(index) {
         const date = todayString();
         let history = [];
-        
+
         try {
           history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         } catch (e) {
@@ -677,7 +691,7 @@
 
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-        } catch(e) {
+        } catch (e) {
           console.warn('無法儲存歷史', e);
         }
       }
@@ -709,10 +723,10 @@
       function exportHistoryText() {
         const week = getWeeklyHistory();
         if (!week.length) return '本週沒有紀錄。';
-        
+
         let text = '=== 本週天父的話回顧 ===\n\n';
         week.forEach((r, idx) => {
-          const dateStr = `${r.date.slice(0,4)}/${r.date.slice(4,6)}/${r.date.slice(6,8)}`;
+          const dateStr = `${r.date.slice(0, 4)}/${r.date.slice(4, 6)}/${r.date.slice(6, 8)}`;
           text += `【${dateStr}】 ${r.ref}\n${r.text}\n\n`;
         });
         return text;
@@ -722,12 +736,12 @@
       function showWeeklyReview() {
         const week = getWeeklyHistory();
         reviewList.innerHTML = '';
-        
+
         if (!week.length) {
           reviewList.innerHTML = '<p style="color:#718096; text-align:center; padding: 20px;">本週尚無紀錄</p>';
         } else {
           week.forEach(item => {
-            const dateStr = `${item.date.slice(0,4)}/${item.date.slice(4,6)}/${item.date.slice(6,8)}`;
+            const dateStr = `${item.date.slice(0, 4)}/${item.date.slice(4, 6)}/${item.date.slice(6, 8)}`;
             const div = document.createElement('div');
             div.className = 'review-item';
             div.innerHTML = `
@@ -743,13 +757,13 @@
       // 清除歷史
       function clearHistory() {
         if (!confirm('確定要清除所有本機紀錄？此動作無法復原。')) return;
-        
+
         try {
           localStorage.removeItem(STORAGE_KEY);
           localStorage.removeItem(TODAY_KEY);
           showToast('✅ 紀錄已清除');
           reviewPanel.style.display = 'none';
-        } catch(e) {
+        } catch (e) {
           console.warn('清除失敗', e);
           showToast('❌ 清除失敗');
         }
@@ -766,7 +780,7 @@
       function formatLetterText(text) {
         let salutation = '';
         let content = text;
-        
+
         const greetings = ['親愛的孩子，', '親愛的孩子：', '孩子，', '孩子：'];
         for (const greeting of greetings) {
           if (text.startsWith(greeting)) {
@@ -775,7 +789,7 @@
             break;
           }
         }
-        
+
         return {
           salutation: salutation,
           content: content
@@ -785,35 +799,35 @@
       // 鋼筆逐字動畫
       function animateLetterWriting(element, text) {
         element.innerHTML = '';
-        
+
         const formatted = formatLetterText(text);
         let totalDelay = 0;
-        
+
         // 稱呼部分
         if (formatted.salutation) {
           const salutationDiv = document.createElement('div');
           salutationDiv.className = 'salutation';
           element.appendChild(salutationDiv);
-          
+
           formatted.salutation.split('').forEach((char, index) => {
             const span = document.createElement('span');
             span.className = 'char';
             span.textContent = char;
             salutationDiv.appendChild(span);
-            
+
             setTimeout(() => {
               span.style.animation = 'penStroke 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards';
             }, index * 100);
           });
-          
+
           totalDelay = formatted.salutation.length * 100;
         }
-        
+
         // 內容部分
         const contentDiv = document.createElement('div');
         contentDiv.className = 'content';
         element.appendChild(contentDiv);
-        
+
         let charIndex = 0;
         formatted.content.split('').forEach((char) => {
           if (char === '\n') {
@@ -823,11 +837,11 @@
             span.className = 'char';
             span.textContent = char;
             contentDiv.appendChild(span);
-            
+
             setTimeout(() => {
               span.style.animation = 'penStroke 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards';
             }, totalDelay + (charIndex * 100));
-            
+
             charIndex++;
           }
         });
@@ -844,33 +858,33 @@
 
           const index = forcedIndex !== null ? forcedIndex : getDailyIndex();
           currentVerse = verses[index]; // 儲存當前經文
-          
+
           const verseElement = document.getElementById('verse');
           const refElement = document.getElementById('reference');
-          
+
           verseElement.innerHTML = '';
           refElement.textContent = '';
           refElement.style.opacity = '0';
-          
+
           // 設置分享連結
           const shareText = encodeURIComponent(
             `${currentVerse.text}\n\n——${currentVerse.ref}`
           );
-          document.getElementById('share-line').href = 
+          document.getElementById('share-line').href =
             `https://line.me/R/msg/text/?${shareText}`;
-          document.getElementById('share-fb').href = 
+          document.getElementById('share-fb').href =
             `https://www.facebook.com/sharer/sharer.php?quote=${shareText}`;
 
           // 顯示容器並開始動畫
           setTimeout(() => {
             loader.style.display = 'none';
             verseBox.style.display = 'block';
-            
+
             const animationDuration = animateLetterWriting(verseElement, currentVerse.text);
-            
+
             // 儲存到歷史
             saveToHistory(index);
-            
+
             // 延遲顯示出處和分享按鈕
             setTimeout(() => {
               refElement.textContent = currentVerse.ref;
@@ -888,9 +902,9 @@
       // 複製經文功能
       copyBtn.addEventListener('click', async () => {
         if (!currentVerse) return;
-        
+
         const textToCopy = `${currentVerse.text}\n\n——${currentVerse.ref}`;
-        
+
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
             await navigator.clipboard.writeText(textToCopy);
@@ -934,7 +948,7 @@
         const ndef = new NDEFReader();
         let nfcTimeout;
         let alreadyRead = false;
-        
+
         // 設定超時自動顯示（修正：縮短超時時間）
         nfcTimeout = setTimeout(() => {
           if (!alreadyRead) {
@@ -946,20 +960,20 @@
         ndef.scan()
           .then(() => {
             console.log('NFC 掃描已啟動');
-            
+
             ndef.addEventListener('reading', ({ message }) => {
               if (alreadyRead) return;
               alreadyRead = true;
-              
+
               clearTimeout(nfcTimeout);
               console.log('NFC 標籤已讀取');
               showVerse();
             });
-            
+
             ndef.addEventListener('readingerror', (error) => {
               if (alreadyRead) return;
               alreadyRead = true;
-              
+
               clearTimeout(nfcTimeout);
               console.error('NFC 讀取錯誤:', error);
               nfcError.textContent = '❌ 讀取失敗，請重試';
@@ -969,7 +983,7 @@
           .catch(err => {
             clearTimeout(nfcTimeout);
             console.error("NFC 啟動錯誤:", err);
-            
+
             // 更友善的錯誤訊息
             if (err.name === 'NotAllowedError') {
               nfcError.textContent = '⚠️ 請允許 NFC 權限';
@@ -978,7 +992,7 @@
             } else {
               nfcError.textContent = '⚠️ NFC 功能不可用';
             }
-            
+
             setTimeout(showVerse, 2000);
           });
       }
@@ -1005,8 +1019,8 @@
 
       // 回顧面板事件
       openReviewBtn.addEventListener('click', showWeeklyReview);
-      closeReviewBtn.addEventListener('click', () => { 
-        reviewPanel.style.display = 'none'; 
+      closeReviewBtn.addEventListener('click', () => {
+        reviewPanel.style.display = 'none';
       });
       clearBtn.addEventListener('click', clearHistory);
       exportBtn.addEventListener('click', () => {
@@ -1032,5 +1046,5 @@
     });
   </script>
 </body>
-</html>
 
+</html>
